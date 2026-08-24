@@ -1,51 +1,49 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<title>Bebek Takip</title>
+<title>Alp · Bebek Takip</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icon-192.png" />
 <link rel="apple-touch-icon" href="icon-192.png" />
-<meta name="theme-color" content="#17141c" />
+<meta name="theme-color" content="#17141c" id="themeColor" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Bebek Takip" />
+<meta name="apple-mobile-web-app-title" content="Alp" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#17141c;
-    --surface:#211c29;
-    --surface-2:#2b2435;
-    --line:#372e43;
-    --text:#f3eee9;
-    --muted:#9a8fa6;
-
-    --milk:#f2c98a;
-    --formula:#8fb8d9;
-    --pump:#c9a0dc;
-    --pee:#e0d089;
-    --poop:#c08457;
-    --care:#8fd0a8;
-    --alert:#e8a06a;
-    --danger:#e08585;
-
-    --r:16px;
+  html[data-theme="dark"]{
+    --ink:#17141c; --surface:#211c29; --surface-2:#2b2435; --line:#372e43;
+    --text:#f3eee9; --muted:#9a8fa6;
+    --milk:#f2c98a; --formula:#8fb8d9; --pump:#c9a0dc; --pee:#e0d089;
+    --poop:#c08457; --care:#8fd0a8; --alert:#e8a06a; --danger:#e08585;
+    --alertBg:rgba(232,160,106,.13); --alertTx:#f0c39a;
+    --tabBg:rgba(23,20,28,.93); --shadow:none;
   }
+  html[data-theme="light"]{
+    --ink:#f8f4ed; --surface:#ffffff; --surface-2:#f2ece2; --line:#e6ddd1;
+    --text:#2b2430; --muted:#7a6f86;
+    --milk:#c08a2c; --formula:#3f7ba6; --pump:#8557ad; --pee:#a8901f;
+    --poop:#8e5a2b; --care:#357f56; --alert:#b96b25; --danger:#c05252;
+    --alertBg:rgba(185,107,37,.10); --alertTx:#8a4f18;
+    --tabBg:rgba(248,244,237,.94); --shadow:0 1px 2px rgba(43,36,48,.05);
+  }
+  :root{ --r:16px; }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;background:var(--ink);}
-  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
-  .display{font-family:'Fraunces',Georgia,serif;font-optical-sizing:auto;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
+    transition:background .25s ease,color .25s ease;}
 
   .shell{max-width:460px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px 96px;}
 
-  /* ---------- login ---------- */
+  /* login */
   .loginWrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;}
   .loginCard{width:100%;max-width:340px;text-align:center;}
   .loginMoon{font-size:40px;line-height:1;margin-bottom:14px;}
-  .loginTitle{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0 0 6px;letter-spacing:-0.3px;}
+  .loginTitle{font-family:'Fraunces',serif;font-weight:600;font-size:27px;margin:0 0 6px;letter-spacing:-0.3px;}
   .loginSub{color:var(--muted);font-size:13px;margin-bottom:22px;}
   .loginCard input{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
     border-radius:14px;padding:14px 16px;font-size:16px;text-align:center;letter-spacing:2px;font-family:'Inter',sans-serif;}
@@ -54,57 +52,53 @@
     padding:14px;font-family:'Fraunces',serif;font-weight:600;font-size:15px;cursor:pointer;}
   .loginErr{color:var(--danger);font-size:12.5px;margin-top:12px;min-height:16px;}
 
-  /* ---------- header ---------- */
+  /* header */
   .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
   .hdrL{display:flex;align-items:center;gap:11px;}
-  .hdrMoon{font-size:24px;}
-  .hdrTitle{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0;letter-spacing:-0.2px;}
-  .hdrSub{color:var(--muted);font-size:11.5px;margin-top:1px;}
-  .hdrR{display:flex;align-items:center;gap:7px;padding-top:3px;}
-  .ghost{background:none;border:1px solid var(--line);color:var(--muted);width:31px;height:31px;
-    border-radius:9px;font-size:13px;cursor:pointer;display:grid;place-items:center;}
+  .hdrMoon{font-size:25px;line-height:1;position:relative;}
+  .hdrMoon .star{position:absolute;top:-1px;left:-4px;font-size:9px;opacity:.75;}
+  .hdrName{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;letter-spacing:-0.3px;line-height:1.1;}
+  .hdrSub{color:var(--muted);font-size:11.5px;margin-top:3px;}
+  .hdrR{display:flex;align-items:center;gap:7px;padding-top:4px;}
+  .ghost{background:var(--surface);border:1px solid var(--line);color:var(--muted);width:31px;height:31px;
+    border-radius:9px;font-size:13px;cursor:pointer;display:grid;place-items:center;box-shadow:var(--shadow);}
   .conn{width:7px;height:7px;border-radius:50%;background:var(--care);}
   .conn.off{background:var(--danger);}
 
-  /* ---------- signature: 24h rhythm strip ---------- */
-  .rhythm{background:var(--surface);border-radius:var(--r);padding:13px 14px 9px;margin-bottom:12px;}
+  /* rhythm */
+  .rhythm{background:var(--surface);border-radius:var(--r);padding:13px 14px 9px;margin-bottom:12px;box-shadow:var(--shadow);}
   .rhythmTop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
   .rhythmLabel{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
   .rhythmCount{font-family:'Fraunces',serif;font-size:12px;color:var(--muted);}
   .rhythmTicks{display:flex;justify-content:space-between;margin-top:5px;}
   .rhythmTicks span{font-size:9px;color:var(--muted);opacity:.65;}
 
-  /* ---------- alerts ---------- */
-  .alert{background:rgba(232,160,106,.13);border-left:2px solid var(--alert);color:#f0c39a;
+  .alert{background:var(--alertBg);border-left:2px solid var(--alert);color:var(--alertTx);
     border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:7px;line-height:1.4;}
 
-  /* ---------- date bar ---------- */
   .dbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .dbar button{background:none;border:none;color:var(--muted);font-size:19px;padding:6px 12px;cursor:pointer;}
   .dbarMid{text-align:center;}
   .dbarDate{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;}
   .dbarToday{font-size:10.5px;color:var(--milk);cursor:pointer;margin-top:2px;}
 
-  /* ---------- stat row ---------- */
   .stats{display:flex;gap:9px;margin-bottom:14px;}
-  .stat{flex:1;background:var(--surface);border-radius:var(--r);padding:12px 13px;}
+  .stat{flex:1;background:var(--surface);border-radius:var(--r);padding:12px 13px;box-shadow:var(--shadow);}
   .statLabel{font-size:10.5px;color:var(--muted);margin-bottom:5px;}
   .statVal{font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1;letter-spacing:-0.5px;}
   .statUnit{font-family:'Inter',sans-serif;font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
   .statSince{background:var(--surface);border-radius:var(--r);padding:13px 14px;margin-bottom:14px;
-    display:flex;justify-content:space-between;align-items:center;}
+    display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);}
 
-  /* ---------- action buttons ---------- */
   .acts{display:grid;gap:9px;margin-bottom:14px;}
   .acts.c3{grid-template-columns:repeat(3,1fr);}
   .act{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 6px;
     display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;color:var(--text);
-    font-family:'Fraunces',serif;font-weight:600;font-size:12.5px;transition:transform .08s;}
+    font-family:'Fraunces',serif;font-weight:600;font-size:12.5px;transition:transform .08s;box-shadow:var(--shadow);}
   .act:active{transform:scale(.96);}
   .act .swatch{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;}
 
-  /* ---------- panel ---------- */
-  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:14px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:14px;box-shadow:var(--shadow);}
   .panelTitle{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;margin-bottom:12px;}
   .fld{margin-bottom:11px;}
   .fld label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;}
@@ -122,14 +116,16 @@
     font-weight:600;font-size:13.5px;cursor:pointer;}
   .bSave{background:var(--text);color:var(--ink);}
   .bCancel{background:var(--surface-2);color:var(--muted);}
-  .bDel{background:rgba(224,133,133,.14);color:var(--danger);}
+  .bDel{background:var(--alertBg);color:var(--danger);}
   .toggleRow{display:flex;align-items:center;gap:9px;margin-bottom:11px;cursor:pointer;}
   .toggleBox{width:19px;height:19px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);
     display:grid;place-items:center;font-size:12px;color:var(--ink);flex-shrink:0;}
   .toggleBox.on{background:var(--milk);border-color:var(--milk);}
   .toggleLabel{font-size:13px;}
+  .setGroup{margin-bottom:15px;}
+  .setGroup:last-of-type{margin-bottom:8px;}
+  .setLabel{font-size:11px;color:var(--muted);margin-bottom:7px;}
 
-  /* ---------- list ---------- */
   .listLabel{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:16px 2px 9px;}
   .item{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);}
   .item:last-child{border-bottom:none;}
@@ -142,18 +138,17 @@
   .itemBtns button{background:none;border:none;color:var(--muted);font-size:14px;padding:6px 5px;cursor:pointer;}
   .blank{text-align:center;color:var(--muted);font-size:12.5px;padding:30px 12px;line-height:1.6;}
 
-  /* ---------- care ---------- */
-  .care{background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:9px;}
+  .care{background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:9px;box-shadow:var(--shadow);}
   .careTop{display:flex;align-items:center;justify-content:space-between;gap:11px;}
   .careL{display:flex;align-items:center;gap:11px;min-width:0;}
   .careIc{width:34px;height:34px;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
-  .careIc.done{background:rgba(143,208,168,.18);}
+  .careIc.done{background:var(--alertBg);}
   .careName{font-family:'Fraunces',serif;font-weight:600;font-size:14px;}
   .careMeta{font-size:11px;color:var(--muted);margin-top:2px;}
   .careMeta .late{color:var(--alert);}
   .careAdd{background:var(--surface-2);border:1px solid var(--line);color:var(--text);border-radius:11px;
     padding:9px 14px;font-family:'Fraunces',serif;font-weight:600;font-size:13px;cursor:pointer;flex-shrink:0;}
-  .careAdd.done{background:rgba(143,208,168,.15);border-color:rgba(143,208,168,.3);color:var(--care);}
+  .careAdd.done{color:var(--care);border-color:var(--care);}
   .careBottom{display:flex;align-items:center;justify-content:space-between;margin-top:11px;
     padding-top:11px;border-top:1px solid var(--line);}
   .careTimes{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);}
@@ -163,24 +158,22 @@
   .careDot{width:7px;height:7px;border-radius:50%;background:var(--care);}
   .careUndo{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;}
 
-  /* ---------- growth ---------- */
-  .chart{background:var(--surface);border-radius:var(--r);padding:15px 12px 12px;margin-bottom:14px;}
+  .chart{background:var(--surface);border-radius:var(--r);padding:15px 12px 12px;margin-bottom:14px;box-shadow:var(--shadow);}
   .chartHdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;padding:0 3px;}
   .chartTitle{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
   .chartDelta{font-family:'Fraunces',serif;font-size:12.5px;color:var(--care);}
-  .birthTag{display:inline-block;background:rgba(242,201,138,.16);color:var(--milk);border-radius:5px;
+  .birthTag{display:inline-block;background:var(--alertBg);color:var(--milk);border-radius:5px;
     padding:1px 6px;font-size:9.5px;margin-left:6px;font-family:'Inter',sans-serif;vertical-align:middle;}
 
-  /* ---------- tabbar ---------- */
-  .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(23,20,28,.93);backdrop-filter:blur(14px);
+  .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
     border-top:1px solid var(--line);display:flex;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
     max-width:460px;margin:0 auto;}
   .tab{flex:1;background:none;border:none;color:var(--muted);padding:7px 2px;display:flex;flex-direction:column;
-    align-items:center;gap:4px;cursor:pointer;font-size:10px;font-family:'Inter',sans-serif;font-weight:500;}
-  .tab .ti{font-size:17px;opacity:.55;transition:opacity .15s;}
+    align-items:center;gap:4px;cursor:pointer;font-size:10px;font-family:'Inter',sans-serif;font-weight:500;position:relative;}
+  .tab .ti{font-size:17px;opacity:.5;transition:opacity .15s;}
   .tab.on{color:var(--text);}
   .tab.on .ti{opacity:1;}
-  .tab.on::before{content:'';position:absolute;margin-top:-9px;width:16px;height:2px;border-radius:2px;background:var(--milk);}
+  .tab.on::before{content:'';position:absolute;top:-1px;width:16px;height:2px;border-radius:2px;background:var(--milk);}
 </style>
 </head>
 <body>
@@ -188,7 +181,7 @@
 <div class="loginWrap" id="loginScreen" style="display:none;">
   <div class="loginCard">
     <div class="loginMoon">🌙</div>
-    <h1 class="loginTitle">Bebek Takip</h1>
+    <h1 class="loginTitle">Alp</h1>
     <div class="loginSub">Devam etmek için şifre girin</div>
     <input type="password" id="pinInput" placeholder="••••••••" autocomplete="current-password" />
     <button id="loginBtn">Giriş yap</button>
@@ -199,18 +192,21 @@
 <div class="shell" id="appScreen" style="display:none;">
   <div class="hdr">
     <div class="hdrL">
-      <div class="hdrMoon">🌙</div>
+      <div class="hdrMoon">🌙<span class="star">✦</span></div>
       <div>
-        <h1 class="hdrTitle">Bebek Takip</h1>
+        <h1 class="hdrName" id="hdrName">Alp</h1>
         <div class="hdrSub" id="hdrSub">Bağlanılıyor…</div>
       </div>
     </div>
     <div class="hdrR">
+      <button class="ghost" id="themeBtn" title="Tema">☾</button>
+      <button class="ghost" id="setBtn" title="Ayarlar">⚙</button>
       <button class="ghost" id="exportBtn" title="Yedek indir">↓</button>
       <div class="conn off" id="conn"></div>
     </div>
   </div>
   <div id="alerts"></div>
+  <div id="settingsSlot"></div>
   <div id="content"></div>
 </div>
 
@@ -224,18 +220,28 @@
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = "https://mqsrnkzdfzstznfqflso.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
-const LOGIN_EMAIL = "aile@bebektakip.app";
-const VAPID_PUBLIC_KEY = "BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
+const SUPABASE_URL="https://mqsrnkzdfzstznfqflso.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
+const LOGIN_EMAIL="aile@bebektakip.app";
+const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
+const BABY="Alp";
 
-/* ===== date helpers — ALL LOCAL TIME (bug fix) ===== */
-function fmtDate(d){
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+/* ---- theme ---- */
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const c=document.getElementById('themeColor');
+  if(c) c.setAttribute('content', t==='dark' ? '#17141c' : '#f8f4ed');
+  const b=document.getElementById('themeBtn');
+  if(b) b.textContent = t==='dark' ? '☾' : '☀';
+  try{ localStorage.setItem('theme',t); }catch(e){}
 }
-function localDay(iso){ return fmtDate(new Date(iso)); }   // <-- was iso.slice(0,10) (UTC) => wrong day after midnight
+(function(){ let t='dark'; try{ t=localStorage.getItem('theme')||'dark'; }catch(e){} applyTheme(t); })();
+
+/* ---- date helpers (local time) ---- */
+function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function localDay(iso){ return fmtDate(new Date(iso)); }
 function today(){ return fmtDate(new Date()); }
-function isToday(iso){ return localDay(iso) === today(); }
+function isToday(iso){ return localDay(iso)===today(); }
 function dayLabel(ds){
   const y=new Date(); y.setDate(y.getDate()-1);
   const d=new Date(ds+'T00:00:00');
@@ -254,83 +260,105 @@ function ago(iso){
 }
 function hoursSince(iso){ return (Date.now()-new Date(iso).getTime())/3600000; }
 function localInput(iso){
-  const d = iso ? new Date(iso) : new Date();
+  const d=iso?new Date(iso):new Date();
   return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-const $ = id => document.getElementById(id);
+const $=id=>document.getElementById(id);
 
-/* ===== meta ===== */
-const FEED = {
-  milk:   {name:'Anne Sütü', ic:'🤱', color:'var(--milk)'},
-  formula:{name:'Mama',      ic:'🍼', color:'var(--formula)'},
-  pump:   {name:'Sağma',     ic:'🫙', color:'var(--pump)'},
-};
-const DIAPER = {
-  pee: {name:'Çiş',      ic:'💧', color:'var(--pee)'},
-  poop:{name:'Kaka',     ic:'💩', color:'var(--poop)'},
-  both:{name:'İkisi de', ic:'🧷', color:'var(--poop)'},
-};
-const CARE = {
-  vitamin_d:    {name:'Vitamin D',       ic:'☀️', key:'reminder_vitamin_d_time',  daily:1},
-  eye_drops:    {name:'Göz Damlası',     ic:'👁️', key:'reminder_eye_drops_time',  daily:1},
-  nose_drops:   {name:'Burun Damlası',   ic:'💦', key:'reminder_nose_drops_time', daily:1},
-  nose_cleaning:{name:'Burun Temizliği', ic:'🧼', key:null,                       daily:null},
-};
+/* ---- grams ---- */
+const g = kg => kg==null?null:Math.round(kg*1000);
+const fmtG = grams => grams==null?'':grams.toLocaleString('tr-TR')+' g';
+function fmtDelta(grams){
+  const s=grams>0?'+':grams<0?'−':'';
+  return s+Math.abs(grams).toLocaleString('tr-TR')+' g';
+}
+function babyAge(birthDate){
+  const b=new Date(birthDate+'T00:00:00'), n=new Date();
+  const days=Math.floor((n-b)/86400000);
+  if(days<0) return null;
+  if(days===0) return 'bugün doğdu';
+  if(days<14) return days+' günlük';
+  if(days<60) return Math.floor(days/7)+' haftalık';
+  const months=Math.floor(days/30.44), rem=days-Math.floor(months*30.44);
+  return months+' aylık'+(rem>=7?' '+Math.floor(rem/7)+' haftalık':'');
+}
+function greeting(){
+  const h=new Date().getHours();
+  if(h<5) return 'İyi geceler';
+  if(h<11) return 'Günaydın';
+  if(h<18) return 'İyi günler';
+  return 'İyi akşamlar';
+}
 
-/* ===== state ===== */
-let entries=[], diapers=[], careLogs=[], growth=[], settings={};
-let tab='feed';
-let dsel={feed:today(), diaper:today()};
-let panel=null;
-let supabase;
+const FEED={ milk:{name:'Anne Sütü',ic:'🤱',color:'var(--milk)'}, formula:{name:'Mama',ic:'🍼',color:'var(--formula)'}, pump:{name:'Sağma',ic:'🫙',color:'var(--pump)'} };
+const DIAPER={ pee:{name:'Çiş',ic:'💧',color:'var(--pee)'}, poop:{name:'Kaka',ic:'💩',color:'var(--poop)'}, both:{name:'İkisi de',ic:'🧷',color:'var(--poop)'} };
+const CARE={
+  vitamin_d:{name:'Vitamin D',ic:'☀️',key:'reminder_vitamin_d_time',daily:1},
+  eye_drops:{name:'Göz Damlası',ic:'👁️',key:'reminder_eye_drops_time',daily:1},
+  nose_drops:{name:'Burun Damlası',ic:'💦',key:'reminder_nose_drops_time',daily:1},
+  nose_cleaning:{name:'Burun Temizliği',ic:'🧼',key:null,daily:null},
+};
+const INTERVALS=[1.5,2,2.5,3,3.5,4];
+const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
-/* ===== signature: 24h rhythm strip ===== */
+let entries=[],diapers=[],careLogs=[],growth=[],settings={};
+let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, supabase;
+
+/* ---- rhythm strip ---- */
 function rhythmStrip(dateStr){
   const marks=[];
   entries.filter(e=>localDay(e.time)===dateStr).forEach(e=>marks.push({t:e.time,c:FEED[e.type].color}));
   diapers.filter(d=>localDay(d.time)===dateStr).forEach(d=>marks.push({t:d.time,c:DIAPER[d.kind].color}));
   const W=340,H=26;
-  const pos = iso => { const d=new Date(iso); return ((d.getHours()*60+d.getMinutes())/1440)*W; };
-  const nowX = dateStr===today() ? ((new Date().getHours()*60+new Date().getMinutes())/1440)*W : null;
+  const pos=iso=>{const d=new Date(iso);return ((d.getHours()*60+d.getMinutes())/1440)*W;};
+  const now=new Date();
+  const nowX=dateStr===today()?((now.getHours()*60+now.getMinutes())/1440)*W:null;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;" preserveAspectRatio="none">
     <rect x="0" y="${H/2-3}" width="${W}" height="6" rx="3" fill="var(--surface-2)"/>
     ${[6,12,18].map(h=>`<line x1="${(h/24)*W}" y1="${H/2-6}" x2="${(h/24)*W}" y2="${H/2+6}" stroke="var(--line)" stroke-width="1"/>`).join('')}
     ${nowX!==null?`<line x1="${nowX}" y1="2" x2="${nowX}" y2="${H-2}" stroke="var(--text)" stroke-width="1" opacity=".35"/>`:''}
     ${marks.map(m=>`<rect x="${pos(m.t)-1.5}" y="${H/2-9}" width="3" height="18" rx="1.5" fill="${m.c}"/>`).join('')}
-  </svg>
-  <div class="rhythmTicks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>`;
+  </svg><div class="rhythmTicks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>`;
 }
 
-/* ===== date bar ===== */
-function dateBar(section){
-  const ds=dsel[section];
-  return `<div class="dbar">
-    <button data-a="prev" data-s="${section}">‹</button>
-    <div class="dbarMid">
-      <div class="dbarDate">${dayLabel(ds)}</div>
-      ${ds!==today()?`<div class="dbarToday" data-a="today" data-s="${section}">bugüne dön</div>`:''}
-    </div>
-    <button data-a="next" data-s="${section}">›</button>
+function dateBar(s){
+  const ds=dsel[s];
+  return `<div class="dbar"><button data-a="prev" data-s="${s}">‹</button>
+    <div class="dbarMid"><div class="dbarDate">${dayLabel(ds)}</div>
+    ${ds!==today()?`<div class="dbarToday" data-a="today" data-s="${s}">bugüne dön</div>`:''}</div>
+    <button data-a="next" data-s="${s}">›</button></div>`;
+}
+
+/* ---- settings ---- */
+function viewSettings(){
+  if(!showSettings) return '';
+  const th=document.documentElement.getAttribute('data-theme');
+  const fh=parseFloat(settings.reminder_feed_hours||'2');
+  const ph=parseFloat(settings.reminder_pump_hours||'3');
+  return `<div class="panel">
+    <div class="panelTitle">Ayarlar</div>
+    <div class="setGroup"><div class="setLabel">Görünüm</div><div class="chips">
+      <div class="chip ${th==='dark'?'on':''}" data-a="theme" data-v="dark">☾ Koyu</div>
+      <div class="chip ${th==='light'?'on':''}" data-a="theme" data-v="light">☀ Açık</div></div></div>
+    <div class="setGroup"><div class="setLabel">Beslenme hatırlatması — son beslenmeden sonra</div><div class="chips">
+      ${INTERVALS.map(v=>`<div class="chip ${v===fh?'on':''}" data-a="setIv" data-key="reminder_feed_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
+    <div class="setGroup"><div class="setLabel">Sağma hatırlatması — son sağmadan sonra</div><div class="chips">
+      ${INTERVALS.map(v=>`<div class="chip ${v===ph?'on':''}" data-a="setIv" data-key="reminder_pump_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
+    <div class="pacts"><button class="bCancel" data-a="closeSettings">Kapat</button></div>
   </div>`;
 }
 
-/* ===== FEED ===== */
+/* ---- FEED ---- */
 function viewFeed(){
   const ds=dsel.feed;
   const day=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
   const sum=t=>day.filter(e=>e.type===t).reduce((s,e)=>s+e.amount,0);
   const all=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time));
-  const lastFeed=all.find(e=>e.type!=='pump');
-  const lastPump=all.find(e=>e.type==='pump');
-  const feedCount=day.filter(e=>e.type!=='pump').length;
-
+  const lastFeed=all.find(e=>e.type!=='pump'), lastPump=all.find(e=>e.type==='pump');
   return dateBar('feed')+`
-    <div class="rhythm">
-      <div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
-      <div class="rhythmCount">${feedCount} beslenme</div></div>
-      ${rhythmStrip(ds)}
-    </div>
+    <div class="rhythm"><div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
+      <div class="rhythmCount">${day.filter(e=>e.type!=='pump').length} beslenme</div></div>${rhythmStrip(ds)}</div>
     <div class="statSince">
       <div><div class="statLabel">Son beslenme</div><div class="statVal" style="font-size:17px;">${lastFeed?ago(lastFeed.time):'—'}</div></div>
       <div style="text-align:right;"><div class="statLabel">Son sağma</div><div class="statVal" style="font-size:17px;">${lastPump?ago(lastPump.time):'—'}</div></div>
@@ -340,249 +368,217 @@ function viewFeed(){
       <div class="stat"><div class="statLabel">Mama</div><div class="statVal">${sum('formula')}<span class="statUnit">cc</span></div></div>
       <div class="stat"><div class="statLabel">Sağılan</div><div class="statVal">${sum('pump')}<span class="statUnit">cc</span></div></div>
     </div>
-    <div class="acts c3">
-      ${Object.entries(FEED).map(([k,m])=>`<button class="act" data-a="newFeed" data-t="${k}">
-        <span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}
-    </div>
+    <div class="acts c3">${Object.entries(FEED).map(([k,m])=>
+      `<button class="act" data-a="newFeed" data-t="${k}"><span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}</div>
     <div id="panelSlot">${panel&&panel.s==='feed'?panelFeed():''}</div>
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(e=>{
       const m=FEED[e.type];
       return `<div class="item"><div class="bar" style="background:${m.color}"></div>
         <div class="itemMid"><div class="itemName">${m.name}</div><div class="itemMeta">${hhmm(e.time)} · ${ago(e.time)}</div></div>
         <div class="itemVal">${e.amount}<span class="statUnit">cc</span></div>
-        <div class="itemBtns"><button data-a="editFeed" data-id="${e.id}">✎</button>
-        <button data-a="delFeed" data-id="${e.id}">✕</button></div></div>`;
+        <div class="itemBtns"><button data-a="editFeed" data-id="${e.id}">✎</button><button data-a="delFeed" data-id="${e.id}">✕</button></div></div>`;
     }).join(''):`<div class="blank">Bu gün için kayıt yok.</div>`}`;
 }
 function panelFeed(){
   const ed=panel.id?entries.find(e=>e.id===panel.id):null;
-  const type=ed?ed.type:panel.t;
-  return `<div class="panel">
-    <div class="panelTitle">${FEED[type].name} ${ed?'düzenle':'kaydı'}</div>
-    <div class="chips">${Object.entries(FEED).map(([k,m])=>
-      `<div class="chip ${k===type?'on':''}" data-a="pickFeedType" data-t="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
+  const type=ed?panel.t:panel.t;
+  return `<div class="panel"><div class="panelTitle">${FEED[type].name} ${ed?'düzenle':'kaydı'}</div>
+    <div class="chips">${Object.entries(FEED).map(([k,m])=>`<div class="chip ${k===type?'on':''}" data-a="pickFeedType" data-t="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
     <div class="row2">
       <div class="fld"><label>Miktar (cc)</label><input type="number" id="fAmt" inputmode="numeric" min="0" step="5" value="${ed?ed.amount:''}" placeholder="60"/></div>
       <div class="fld"><label>Saat</label><input type="datetime-local" id="fTime" value="${localInput(ed?ed.time:null)}"/></div>
     </div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
       ${ed?`<button class="bDel" data-a="delFeed" data-id="${ed.id}">Sil</button>`:''}
-      <button class="bSave" data-a="saveFeed">Kaydet</button></div>
-  </div>`;
+      <button class="bSave" data-a="saveFeed">Kaydet</button></div></div>`;
 }
 
-/* ===== DIAPER ===== */
+/* ---- DIAPER ---- */
 function viewDiaper(){
   const ds=dsel.diaper;
   const day=diapers.filter(d=>localDay(d.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
-  const pee=day.filter(d=>d.kind!=='poop').length;
-  const poop=day.filter(d=>d.kind!=='pee').length;
   const last=[...diapers].sort((a,b)=>new Date(b.time)-new Date(a.time))[0];
-
   return dateBar('diaper')+`
-    <div class="rhythm">
-      <div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
-      <div class="rhythmCount">${day.length} değişim</div></div>
-      ${rhythmStrip(ds)}
-    </div>
+    <div class="rhythm"><div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
+      <div class="rhythmCount">${day.length} değişim</div></div>${rhythmStrip(ds)}</div>
     <div class="stats">
       <div class="stat"><div class="statLabel">Son değişim</div><div class="statVal" style="font-size:16px;">${last?ago(last.time):'—'}</div></div>
-      <div class="stat"><div class="statLabel">Çiş</div><div class="statVal">${pee}</div></div>
-      <div class="stat"><div class="statLabel">Kaka</div><div class="statVal">${poop}</div></div>
+      <div class="stat"><div class="statLabel">Çiş</div><div class="statVal">${day.filter(d=>d.kind!=='poop').length}</div></div>
+      <div class="stat"><div class="statLabel">Kaka</div><div class="statVal">${day.filter(d=>d.kind!=='pee').length}</div></div>
     </div>
-    <div class="acts c3">
-      ${Object.entries(DIAPER).map(([k,m])=>`<button class="act" data-a="quickDiaper" data-k="${k}">
-        <span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}
-    </div>
+    <div class="acts c3">${Object.entries(DIAPER).map(([k,m])=>
+      `<button class="act" data-a="quickDiaper" data-k="${k}"><span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}</div>
     <div id="panelSlot">${panel&&panel.s==='diaper'?panelDiaper():''}</div>
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(d=>{
       const m=DIAPER[d.kind];
       return `<div class="item"><div class="bar" style="background:${m.color}"></div>
         <div class="itemMid"><div class="itemName">${m.name}</div><div class="itemMeta">${hhmm(d.time)} · ${ago(d.time)}</div></div>
-        <div class="itemBtns"><button data-a="editDiaper" data-id="${d.id}">✎</button>
-        <button data-a="delDiaper" data-id="${d.id}">✕</button></div></div>`;
+        <div class="itemBtns"><button data-a="editDiaper" data-id="${d.id}">✎</button><button data-a="delDiaper" data-id="${d.id}">✕</button></div></div>`;
     }).join(''):`<div class="blank">Bu gün için kayıt yok.<br>Yukarıdan tek dokunuşla ekleyin.</div>`}`;
 }
 function panelDiaper(){
   const ed=diapers.find(d=>d.id===panel.id);
   if(!ed) return '';
-  return `<div class="panel">
-    <div class="panelTitle">Bez kaydı düzenle</div>
-    <div class="chips">${Object.entries(DIAPER).map(([k,m])=>
-      `<div class="chip ${k===panel.k?'on':''}" data-a="pickDiaperKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
+  return `<div class="panel"><div class="panelTitle">Bez kaydı düzenle</div>
+    <div class="chips">${Object.entries(DIAPER).map(([k,m])=>`<div class="chip ${k===panel.k?'on':''}" data-a="pickDiaperKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
     <div class="fld"><label>Saat</label><input type="datetime-local" id="dTime" value="${localInput(ed.time)}"/></div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
       <button class="bDel" data-a="delDiaper" data-id="${ed.id}">Sil</button>
-      <button class="bSave" data-a="saveDiaper">Kaydet</button></div>
-  </div>`;
+      <button class="bSave" data-a="saveDiaper">Kaydet</button></div></div>`;
 }
 
-/* ===== CARE ===== */
-function careToday(kind){ return careLogs.filter(c=>c.kind===kind&&isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
+/* ---- CARE ---- */
+function careToday(k){ return careLogs.filter(c=>c.kind===k&&isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
 function viewCare(){
   const rows=Object.entries(CARE).map(([kind,m])=>{
-    const list=careToday(kind);
-    const n=list.length;
+    const list=careToday(kind), n=list.length;
     const target=m.key?settings[m.key]:null;
     const done=m.daily?n>=m.daily:n>0;
     let meta;
     if(m.daily){
       if(n>0) meta=`Bugün yapıldı · ${hhmm(list[0].time)}`;
-      else {
+      else{
         const [h,mi]=(target||'09:00').split(':').map(Number);
         const t=new Date(); t.setHours(h,mi,0,0);
-        meta = Date.now()>t.getTime()
-          ? `<span class="late">Saati geçti — henüz yapılmadı</span>`
-          : `Bugün için planlandı`;
+        meta=Date.now()>t.getTime()?`<span class="late">Saati geçti — henüz yapılmadı</span>`:`Bugün için planlandı`;
       }
-    } else {
-      meta = n>0 ? `Bugün ${n} kez · son ${hhmm(list[0].time)}` : 'Bugün henüz yapılmadı';
-    }
-    return `<div class="care">
-      <div class="careTop">
-        <div class="careL">
-          <div class="careIc ${done?'done':''}">${m.ic}</div>
-          <div style="min-width:0;"><div class="careName">${m.name}</div><div class="careMeta">${meta}</div></div>
-        </div>
-        <button class="careAdd ${done?'done':''}" data-a="logCare" data-k="${kind}">${done&&m.daily?'✓ Yapıldı':'+ Kaydet'}</button>
-      </div>
+    } else meta = n>0?`Bugün ${n} kez · son ${hhmm(list[0].time)}`:'Bugün henüz yapılmadı';
+    return `<div class="care"><div class="careTop">
+      <div class="careL"><div class="careIc ${done?'done':''}">${m.ic}</div>
+        <div style="min-width:0;"><div class="careName">${m.name}</div><div class="careMeta">${meta}</div></div></div>
+      <button class="careAdd ${done?'done':''}" data-a="logCare" data-k="${kind}">${done&&m.daily?'✓ Yapıldı':'+ Kaydet'}</button></div>
       <div class="careBottom">
-        ${m.key
-          ? `<div class="careTimes">Hatırlatma <input type="time" value="${target||'09:00'}" data-a="setTime" data-key="${m.key}"/></div>`
-          : `<div class="careDots">${n?Array.from({length:Math.min(n,8)}).map(()=>`<span class="careDot"></span>`).join(''):'<span style="font-size:11px;color:var(--muted)">kayıt yok</span>'}${n>8?`<span style="font-size:11px;color:var(--muted);margin-left:3px;">+${n-8}</span>`:''}</div>`}
+        ${m.key?`<div class="careTimes">Hatırlatma <input type="time" value="${target||'09:00'}" data-a="setTime" data-key="${m.key}"/></div>`
+          :`<div class="careDots">${n?Array.from({length:Math.min(n,8)}).map(()=>`<span class="careDot"></span>`).join(''):'<span style="font-size:11px;color:var(--muted)">kayıt yok</span>'}${n>8?`<span style="font-size:11px;color:var(--muted);margin-left:3px;">+${n-8}</span>`:''}</div>`}
         ${n?`<button class="careUndo" data-a="undoCare" data-id="${list[0].id}">son kaydı geri al</button>`:'<span></span>'}
-      </div>
-    </div>`;
+      </div></div>`;
   }).join('');
-
   const log=careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
-  return rows + (log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
+  return rows+(log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
     `<div class="item"><div class="bar" style="background:var(--care)"></div>
       <div class="itemMid"><div class="itemName">${CARE[c.kind].name}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
       <div class="itemBtns"><button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
     :`<div class="blank">Bugün için bakım kaydı yok.</div>`);
 }
 
-/* ===== GROWTH ===== */
+/* ---- GROWTH (grams) ---- */
 function viewGrowth(){
   const sorted=[...growth].sort((a,b)=>new Date(a.measured_on)-new Date(b.measured_on));
-  const birth=growth.find(g=>g.is_birth);
+  const birth=growth.find(x=>x.is_birth);
   const latest=sorted[sorted.length-1];
   let delta='';
-  if(birth&&latest&&birth.id!==latest.id&&birth.weight_kg&&latest.weight_kg){
-    const d=(latest.weight_kg-birth.weight_kg).toFixed(2);
-    delta=`Doğumdan beri ${d>0?'+':''}${d} kg`;
-  }
+  if(birth&&latest&&birth.id!==latest.id&&birth.weight_kg!=null&&latest.weight_kg!=null)
+    delta=`Doğumdan beri ${fmtDelta(g(latest.weight_kg)-g(birth.weight_kg))}`;
   const desc=[...growth].sort((a,b)=>new Date(b.measured_on)-new Date(a.measured_on));
-  return `
-    <div class="acts" style="grid-template-columns:1fr;">
-      <button class="act" data-a="newGrowth"><span class="swatch" style="background:var(--care)22;">📐</span>Ölçüm Ekle</button>
-    </div>
+  return `<div class="acts" style="grid-template-columns:1fr;">
+      <button class="act" data-a="newGrowth"><span class="swatch" style="background:var(--care)22;">📐</span>Ölçüm Ekle</button></div>
     <div id="panelSlot">${panel&&panel.s==='growth'?panelGrowth():''}</div>
-    <div class="chart">
-      <div class="chartHdr"><div class="chartTitle">Kilo eğrisi</div><div class="chartDelta">${delta}</div></div>
-      ${weightChart(sorted)}
-    </div>
-    ${!birth?`<div class="alert">Doğum kilosunu ekleyin — eğri oradan başlasın, büyüme daha sağlıklı takip edilir.</div>`:''}
-    ${desc.length?`<div class="listLabel">Ölçümler</div>`+desc.map(g=>
-      `<div class="item"><div class="bar" style="background:${g.is_birth?'var(--milk)':'var(--care)'}"></div>
-        <div class="itemMid">
-          <div class="itemName">${new Date(g.measured_on+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}${g.is_birth?'<span class="birthTag">DOĞUM</span>':''}</div>
-          <div class="itemMeta">${g.weight_kg?g.weight_kg+' kg':''}${g.weight_kg&&g.height_cm?' · ':''}${g.height_cm?g.height_cm+' cm':''}</div>
-        </div>
-        <div class="itemBtns"><button data-a="editGrowth" data-id="${g.id}">✎</button>
-        <button data-a="delGrowth" data-id="${g.id}">✕</button></div></div>`).join('')
+    <div class="chart"><div class="chartHdr"><div class="chartTitle">Kilo eğrisi</div><div class="chartDelta">${delta}</div></div>${weightChart(sorted)}</div>
+    ${!birth?`<div class="alert">Doğum kilosunu ekleyin — eğri oradan başlasın, ${BABY}'in büyümesi daha sağlıklı takip edilsin.</div>`:''}
+    ${desc.length?`<div class="listLabel">Ölçümler</div>`+desc.map(x=>
+      `<div class="item"><div class="bar" style="background:${x.is_birth?'var(--milk)':'var(--care)'}"></div>
+        <div class="itemMid"><div class="itemName">${new Date(x.measured_on+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}${x.is_birth?'<span class="birthTag">DOĞUM</span>':''}</div>
+        <div class="itemMeta">${x.weight_kg!=null?fmtG(g(x.weight_kg)):''}${x.weight_kg!=null&&x.height_cm!=null?' · ':''}${x.height_cm!=null?x.height_cm+' cm':''}</div></div>
+        <div class="itemBtns"><button data-a="editGrowth" data-id="${x.id}">✎</button><button data-a="delGrowth" data-id="${x.id}">✕</button></div></div>`).join('')
       :`<div class="blank">Henüz ölçüm yok.</div>`}`;
 }
 function weightChart(sorted){
-  const pts=sorted.filter(g=>g.weight_kg!=null);
+  const pts=sorted.filter(x=>x.weight_kg!=null);
   if(pts.length<2) return `<div class="blank" style="padding:22px 10px;">Eğri için en az 2 kilo ölçümü gerekiyor.${pts.length===1?'<br>Bir ölçüm daha ekleyin.':''}</div>`;
-  const W=320,H=130,L=34,R=8,T=12,B=22;
-  const xs=pts.map(g=>new Date(g.measured_on).getTime());
-  const ys=pts.map(g=>g.weight_kg);
+  const W=320,H=130,L=42,R=8,T=12,B=22;
+  const xs=pts.map(x=>new Date(x.measured_on).getTime()), ys=pts.map(x=>g(x.weight_kg));
   const x0=Math.min(...xs),x1=Math.max(...xs);
-  const pad=(Math.max(...ys)-Math.min(...ys))*0.15||0.3;
+  const pad=(Math.max(...ys)-Math.min(...ys))*0.15||150;
   const y0=Math.min(...ys)-pad, y1=Math.max(...ys)+pad;
   const px=v=>L+(x1===x0?0:(v-x0)/(x1-x0))*(W-L-R);
   const py=v=>(H-B)-((v-y0)/(y1-y0))*(H-T-B);
-  const line=pts.map(g=>`${px(new Date(g.measured_on).getTime())},${py(g.weight_kg)}`).join(' ');
-  const area=`${L},${H-B} ${line} ${px(x1)},${H-B}`;
+  const line=pts.map(x=>`${px(new Date(x.measured_on).getTime())},${py(g(x.weight_kg))}`).join(' ');
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">
     <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="var(--milk)" stop-opacity=".22"/>
-      <stop offset="100%" stop-color="var(--milk)" stop-opacity="0"/></linearGradient></defs>
-    <polygon points="${area}" fill="url(#wg)"/>
+      <stop offset="0%" stop-color="var(--milk)" stop-opacity=".22"/><stop offset="100%" stop-color="var(--milk)" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="${L},${H-B} ${line} ${px(x1)},${H-B}" fill="url(#wg)"/>
     <polyline points="${line}" fill="none" stroke="var(--milk)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    ${pts.map(g=>`<circle cx="${px(new Date(g.measured_on).getTime())}" cy="${py(g.weight_kg)}" r="${g.is_birth?4:3}"
-      fill="${g.is_birth?'var(--ink)':'var(--milk)'}" stroke="var(--milk)" stroke-width="${g.is_birth?2:0}"/>`).join('')}
-    <text x="2" y="${py(y1)+4}" fill="var(--muted)" font-size="9">${y1.toFixed(1)}</text>
-    <text x="2" y="${py(y0)+4}" fill="var(--muted)" font-size="9">${y0.toFixed(1)}</text>
+    ${pts.map(x=>`<circle cx="${px(new Date(x.measured_on).getTime())}" cy="${py(g(x.weight_kg))}" r="${x.is_birth?4:3}" fill="${x.is_birth?'var(--surface)':'var(--milk)'}" stroke="var(--milk)" stroke-width="${x.is_birth?2:0}"/>`).join('')}
+    <text x="2" y="${py(y1)+4}" fill="var(--muted)" font-size="8.5">${Math.round(y1).toLocaleString('tr-TR')}</text>
+    <text x="2" y="${py(y0)+4}" fill="var(--muted)" font-size="8.5">${Math.round(y0).toLocaleString('tr-TR')}</text>
     <text x="${L}" y="${H-5}" fill="var(--muted)" font-size="9">${new Date(x0).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
     <text x="${W-R}" y="${H-5}" fill="var(--muted)" font-size="9" text-anchor="end">${new Date(x1).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
   </svg>`;
 }
 function panelGrowth(){
-  const ed=panel.id?growth.find(g=>g.id===panel.id):null;
-  const isBirth = ed ? ed.is_birth : !!panel.birth;
-  const hasBirth = growth.some(g=>g.is_birth && (!ed || g.id!==ed.id));
-  return `<div class="panel">
-    <div class="panelTitle">Ölçüm ${ed?'düzenle':'ekle'}</div>
-    ${!hasBirth?`<div class="toggleRow" data-a="toggleBirth">
-      <div class="toggleBox ${isBirth?'on':''}">${isBirth?'✓':''}</div>
+  const ed=panel.id?growth.find(x=>x.id===panel.id):null;
+  const isBirth=ed?ed.is_birth:!!panel.birth;
+  const hasBirth=growth.some(x=>x.is_birth&&(!ed||x.id!==ed.id));
+  return `<div class="panel"><div class="panelTitle">Ölçüm ${ed?'düzenle':'ekle'}</div>
+    ${!hasBirth?`<div class="toggleRow" data-a="toggleBirth"><div class="toggleBox ${isBirth?'on':''}">${isBirth?'✓':''}</div>
       <div class="toggleLabel">Bu doğum ölçümü</div></div>`:''}
     <div class="row2">
-      <div class="fld"><label>Kilo (kg)</label><input type="number" id="gW" inputmode="decimal" step="0.01" value="${ed&&ed.weight_kg!=null?ed.weight_kg:''}" placeholder="4.20"/></div>
+      <div class="fld"><label>Kilo (gram)</label><input type="number" id="gW" inputmode="numeric" step="10" value="${ed&&ed.weight_kg!=null?g(ed.weight_kg):''}" placeholder="4250"/></div>
       <div class="fld"><label>Boy (cm)</label><input type="number" id="gH" inputmode="decimal" step="0.1" value="${ed&&ed.height_cm!=null?ed.height_cm:''}" placeholder="55"/></div>
     </div>
     <div class="fld"><label>${isBirth?'Doğum tarihi':'Ölçüm tarihi'}</label><input type="date" id="gD" value="${ed?ed.measured_on:today()}"/></div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
       ${ed?`<button class="bDel" data-a="delGrowth" data-id="${ed.id}">Sil</button>`:''}
-      <button class="bSave" data-a="saveGrowth">Kaydet</button></div>
-  </div>`;
+      <button class="bSave" data-a="saveGrowth">Kaydet</button></div></div>`;
 }
 
-/* ===== alerts ===== */
+/* ---- alerts ---- */
 function renderAlerts(){
   const out=[];
+  const all=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time));
   const fh=parseFloat(settings.reminder_feed_hours||'2');
-  const lf=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time)).find(e=>e.type!=='pump');
-  if(lf&&hoursSince(lf.time)>=fh) out.push(`Son beslenmeden ${Math.floor(hoursSince(lf.time))} saatten fazla geçti`);
+  const lf=all.find(e=>e.type!=='pump');
+  if(lf&&hoursSince(lf.time)>=fh) out.push(`Süt vakti — son beslenmeden ${Math.floor(hoursSince(lf.time))} saatten fazla geçti`);
+  const ph=parseFloat(settings.reminder_pump_hours||'3');
+  const lp=all.find(e=>e.type==='pump');
+  if(lp&&hoursSince(lp.time)>=ph) out.push(`Sağma vakti — son sağmadan ${Math.floor(hoursSince(lp.time))} saatten fazla geçti`);
   Object.entries(CARE).forEach(([k,m])=>{
     if(!m.key) return;
-    const t=settings[m.key]; if(!t) return;
-    if(careToday(k).length) return;
+    const t=settings[m.key]; if(!t||careToday(k).length) return;
     const [h,mi]=t.split(':').map(Number);
     const d=new Date(); d.setHours(h,mi,0,0);
     if(Date.now()>d.getTime()) out.push(`${m.name} bugün henüz yapılmadı (${t})`);
   });
-  $('alerts').innerHTML = out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
+  $('alerts').innerHTML=out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
 }
 
-/* ===== render ===== */
+function renderHeader(){
+  const birth=growth.find(x=>x.is_birth);
+  const age=birth?babyAge(birth.measured_on):null;
+  $('hdrName').textContent=BABY;
+  $('hdrSub').textContent = age ? `${age} · ${greeting()}` : greeting();
+}
 function render(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-  renderAlerts();
+  renderHeader(); renderAlerts();
+  $('settingsSlot').innerHTML=viewSettings();
   $('content').innerHTML = tab==='feed'?viewFeed():tab==='diaper'?viewDiaper():tab==='care'?viewCare():viewGrowth();
 }
 
-/* ===== events ===== */
-$('content').addEventListener('change', async ev=>{
+/* ---- events ---- */
+document.addEventListener('change', async ev=>{
   const t=ev.target.closest('[data-a="setTime"]');
   if(!t) return;
-  await supabase.from('settings').upsert({key:t.dataset.key, value:t.value},{onConflict:'key'});
+  await supabase.from('settings').upsert({key:t.dataset.key,value:t.value},{onConflict:'key'});
 });
-$('content').addEventListener('click', async ev=>{
+document.addEventListener('click', async ev=>{
   const b=ev.target.closest('[data-a]');
   if(!b) return;
   const a=b.dataset.a;
   if(a==='setTime') return;
 
+  if(a==='theme'){ applyTheme(b.dataset.v); render(); return; }
+  if(a==='setIv'){
+    await supabase.from('settings').upsert({key:b.dataset.key,value:b.dataset.v},{onConflict:'key'});
+    settings[b.dataset.key]=b.dataset.v; render(); return;
+  }
+  if(a==='closeSettings'){ showSettings=false; render(); return; }
+
   if(a==='prev'||a==='next'){
-    const s=b.dataset.s, d=new Date(dsel[s]+'T00:00:00');
+    const s=b.dataset.s,d=new Date(dsel[s]+'T00:00:00');
     d.setDate(d.getDate()+(a==='next'?1:-1)); dsel[s]=fmtDate(d);
   }
   else if(a==='today'){ dsel[b.dataset.s]=today(); }
-
   else if(a==='newFeed'){ panel={s:'feed',t:b.dataset.t,id:null}; }
   else if(a==='pickFeedType'){ panel={...panel,t:b.dataset.t}; }
   else if(a==='editFeed'){ const e=entries.find(x=>x.id===b.dataset.id); panel={s:'feed',t:e.type,id:e.id}; }
@@ -591,12 +587,10 @@ $('content').addEventListener('click', async ev=>{
     const amt=parseFloat($('fAmt').value), tv=$('fTime').value;
     if(!amt||amt<=0){ $('fAmt').style.borderColor='var(--danger)'; return; }
     const iso=new Date(tv).toISOString();
-    const type = panel.t;
-    if(panel.id) await supabase.from('entries').update({type,amount:amt,time:iso}).eq('id',panel.id);
-    else await supabase.from('entries').insert({type,amount:amt,time:iso});
+    if(panel.id) await supabase.from('entries').update({type:panel.t,amount:amt,time:iso}).eq('id',panel.id);
+    else await supabase.from('entries').insert({type:panel.t,amount:amt,time:iso});
     dsel.feed=localDay(iso); panel=null;
   }
-
   else if(a==='quickDiaper'){ await supabase.from('diapers').insert({kind:b.dataset.k,time:new Date().toISOString()}); dsel.diaper=today(); }
   else if(a==='editDiaper'){ const d=diapers.find(x=>x.id===b.dataset.id); panel={s:'diaper',k:d.kind,id:d.id}; }
   else if(a==='pickDiaperKind'){ panel={...panel,k:b.dataset.k}; }
@@ -606,48 +600,47 @@ $('content').addEventListener('click', async ev=>{
     await supabase.from('diapers').update({kind:panel.k,time:iso}).eq('id',panel.id);
     dsel.diaper=localDay(iso); panel=null;
   }
-
   else if(a==='logCare'){ await supabase.from('care_logs').insert({kind:b.dataset.k,time:new Date().toISOString()}); }
   else if(a==='undoCare'||a==='delCare'){ await supabase.from('care_logs').delete().eq('id',b.dataset.id); }
-
-  else if(a==='newGrowth'){ panel={s:'growth',id:null,birth:!growth.some(g=>g.is_birth)}; }
+  else if(a==='newGrowth'){ panel={s:'growth',id:null,birth:!growth.some(x=>x.is_birth)}; }
   else if(a==='editGrowth'){ panel={s:'growth',id:b.dataset.id}; }
   else if(a==='toggleBirth'){
-    if(panel.id){ const g=growth.find(x=>x.id===panel.id); g.is_birth=!g.is_birth; }
+    if(panel.id){ const x=growth.find(y=>y.id===panel.id); x.is_birth=!x.is_birth; }
     else panel={...panel,birth:!panel.birth};
   }
   else if(a==='delGrowth'){ await supabase.from('growth').delete().eq('id',b.dataset.id); panel=null; }
   else if(a==='saveGrowth'){
-    const w=$('gW').value?parseFloat($('gW').value):null;
+    const gv=$('gW').value?parseFloat($('gW').value):null;
     const h=$('gH').value?parseFloat($('gH').value):null;
     const d=$('gD').value;
-    if(w===null&&h===null){ $('gW').style.borderColor='var(--danger)'; return; }
-    const ed=panel.id?growth.find(g=>g.id===panel.id):null;
-    const isBirth = ed?ed.is_birth:!!panel.birth;
-    const row={weight_kg:w,height_cm:h,measured_on:d,is_birth:isBirth};
+    if(gv===null&&h===null){ $('gW').style.borderColor='var(--danger)'; return; }
+    const ed=panel.id?growth.find(x=>x.id===panel.id):null;
+    const row={weight_kg:gv!=null?gv/1000:null,height_cm:h,measured_on:d,is_birth:ed?ed.is_birth:!!panel.birth};
     if(panel.id) await supabase.from('growth').update(row).eq('id',panel.id);
     else await supabase.from('growth').insert(row);
     panel=null;
   }
-
   else if(a==='close'){ panel=null; }
+  else return;
   render();
 });
 
-document.querySelectorAll('.tab').forEach(b=>
-  b.addEventListener('click',()=>{ tab=b.dataset.tab; panel=null; render(); }));
-
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{ tab=b.dataset.tab; panel=null; render(); }));
+$('themeBtn').addEventListener('click',()=>{
+  applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); render();
+});
+$('setBtn').addEventListener('click',()=>{ showSettings=!showSettings; render(); });
 $('exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify({exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,settings},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({baby:BABY,exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,settings},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`bebek-takip-yedek-${today()}.json`;
+  a.href=url; a.download=`alp-takip-yedek-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 });
 
-/* ===== push ===== */
+/* ---- push ---- */
 function b64ToU8(s){
-  const p='='.repeat((4-s.length%4)%4), b=(s+p).replace(/-/g,'+').replace(/_/g,'/');
-  const raw=atob(b), out=new Uint8Array(raw.length);
+  const p='='.repeat((4-s.length%4)%4), bb=(s+p).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(bb), out=new Uint8Array(raw.length);
   for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
   return out;
 }
@@ -664,7 +657,7 @@ async function setupPush(){
   }catch(e){ console.error('push',e); }
 }
 
-/* ===== data ===== */
+/* ---- data ---- */
 async function refetch(){
   const [a,b,c,d,e]=await Promise.all([
     supabase.from('entries').select('*').order('time',{ascending:false}),
@@ -682,17 +675,14 @@ async function refetch(){
 }
 function showLogin(){ $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
 function showApp(){ $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
-
 async function start(){
   await refetch();
   $('conn').classList.remove('off');
-  $('hdrSub').textContent='Beslenme · bez · bakım · büyüme';
   setupPush();
   ['entries','diapers','care_logs','growth','settings'].forEach(t=>
     supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
   setInterval(render,30000);
 }
-
 supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 supabase.auth.getSession().then(({data})=>{ if(data.session){ showApp(); start(); } else showLogin(); });
 $('loginBtn').addEventListener('click',async()=>{
