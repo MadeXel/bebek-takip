@@ -7,678 +7,700 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icon-192.png" />
 <link rel="apple-touch-icon" href="icon-192.png" />
-<meta name="theme-color" content="#141a2b" />
+<meta name="theme-color" content="#17141c" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Bebek Takip" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
   :root{
-    --bg:#141a2b; --surface:#1e2740; --surface-2:#26314f; --line:#333f5e;
-    --text:#eef0f7; --text-muted:#8b93ac;
-    --milk:#f6c453; --milk-soft:#4a4227;
-    --formula:#7ec8e3; --formula-soft:#213c47;
-    --pump:#c9a6f2; --pump-soft:#332a4d;
-    --pee:#8fd3f4; --pee-soft:#1d3a4a;
-    --poop:#c99a6a; --poop-soft:#3f2f22;
-    --care:#9be3b0; --care-soft:#1f3a2a;
-    --danger:#e37676;
+    --ink:#17141c;
+    --surface:#211c29;
+    --surface-2:#2b2435;
+    --line:#372e43;
+    --text:#f3eee9;
+    --muted:#9a8fa6;
+
+    --milk:#f2c98a;
+    --formula:#8fb8d9;
+    --pump:#c9a0dc;
+    --pee:#e0d089;
+    --poop:#c08457;
+    --care:#8fd0a8;
+    --alert:#e8a06a;
+    --danger:#e08585;
+
+    --r:16px;
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;background:var(--bg);}
-  body{font-family:'Inter',sans-serif;color:var(--text);padding-bottom:env(safe-area-inset-bottom);}
-  .wrap{min-height:100vh;padding:16px 14px 90px;max-width:480px;margin:0 auto;}
-  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-  .brand{display:flex;align-items:center;gap:10px;}
-  .moon{font-size:22px;}
-  h1{font-family:'Quicksand',sans-serif;font-size:18px;font-weight:700;margin:0;letter-spacing:.2px;}
-  .sub{color:var(--text-muted);font-size:12px;margin-top:2px;}
-  .iconbtn{background:var(--surface);border:none;color:var(--text-muted);width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer;}
-  .topRight{display:flex;gap:6px;}
-  .connbadge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
-  .connbadge .pulse{width:7px;height:7px;border-radius:50%;background:#5fd07a;}
-  .connbadge.offline .pulse{background:var(--danger);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:var(--ink);}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
+  .display{font-family:'Fraunces',Georgia,serif;font-optical-sizing:auto;}
 
-  .reminders{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-  .reminder{background:#3a2f1e;color:#f4d9a6;border-radius:12px;padding:9px 12px;font-size:12.5px;display:flex;align-items:center;gap:8px;}
+  .shell{max-width:460px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px 96px;}
 
-  .tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;padding:6px 10px calc(6px + env(safe-area-inset-bottom));max-width:480px;margin:0 auto;}
-  .tabbtn{flex:1;background:none;border:none;color:var(--text-muted);font-family:'Quicksand',sans-serif;font-weight:600;font-size:11px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border-radius:10px;}
-  .tabbtn .ic{font-size:18px;}
-  .tabbtn.active{color:var(--text);background:var(--surface-2);}
+  /* ---------- login ---------- */
+  .loginWrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .loginCard{width:100%;max-width:340px;text-align:center;}
+  .loginMoon{font-size:40px;line-height:1;margin-bottom:14px;}
+  .loginTitle{font-family:'Fraunces',serif;font-weight:600;font-size:26px;margin:0 0 6px;letter-spacing:-0.3px;}
+  .loginSub{color:var(--muted);font-size:13px;margin-bottom:22px;}
+  .loginCard input{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+    border-radius:14px;padding:14px 16px;font-size:16px;text-align:center;letter-spacing:2px;font-family:'Inter',sans-serif;}
+  .loginCard input:focus{outline:none;border-color:var(--milk);}
+  .loginCard button{width:100%;margin-top:10px;background:var(--text);color:var(--ink);border:none;border-radius:14px;
+    padding:14px;font-family:'Fraunces',serif;font-weight:600;font-size:15px;cursor:pointer;}
+  .loginErr{color:var(--danger);font-size:12.5px;margin-top:12px;min-height:16px;}
 
-  .datebar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:14px;padding:8px 10px;margin-bottom:14px;}
-  .datebar button{background:none;border:none;color:var(--text);font-size:16px;padding:6px 10px;cursor:pointer;border-radius:10px;}
-  .datebar button:active{background:var(--surface-2);}
-  .datelabel{font-family:'Quicksand',sans-serif;font-weight:600;font-size:14px;}
-  .today-pill{font-size:11px;color:var(--text-muted);cursor:pointer;text-decoration:underline;}
+  /* ---------- header ---------- */
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+  .hdrL{display:flex;align-items:center;gap:11px;}
+  .hdrMoon{font-size:24px;}
+  .hdrTitle{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0;letter-spacing:-0.2px;}
+  .hdrSub{color:var(--muted);font-size:11.5px;margin-top:1px;}
+  .hdrR{display:flex;align-items:center;gap:7px;padding-top:3px;}
+  .ghost{background:none;border:1px solid var(--line);color:var(--muted);width:31px;height:31px;
+    border-radius:9px;font-size:13px;cursor:pointer;display:grid;place-items:center;}
+  .conn{width:7px;height:7px;border-radius:50%;background:var(--care);}
+  .conn.off{background:var(--danger);}
 
-  .summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-  .scard{background:var(--surface);border-radius:14px;padding:10px 12px;}
-  .scard .label{font-size:11px;color:var(--text-muted);margin-bottom:3px;}
-  .scard .val{font-family:'Quicksand',sans-serif;font-weight:700;font-size:14.5px;}
-  .scard.wide{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;}
+  /* ---------- signature: 24h rhythm strip ---------- */
+  .rhythm{background:var(--surface);border-radius:var(--r);padding:13px 14px 9px;margin-bottom:12px;}
+  .rhythmTop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .rhythmLabel{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+  .rhythmCount{font-family:'Fraunces',serif;font-size:12px;color:var(--muted);}
+  .rhythmTicks{display:flex;justify-content:space-between;margin-top:5px;}
+  .rhythmTicks span{font-size:9px;color:var(--muted);opacity:.65;}
 
-  .actions{display:grid;gap:8px;margin-bottom:14px;}
-  .actions.cols3{grid-template-columns:1fr 1fr 1fr;}
-  .actions.cols2{grid-template-columns:1fr 1fr;}
-  .actions.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
-  .abtn{border:none;border-radius:14px;padding:12px 4px;font-family:'Quicksand',sans-serif;font-weight:600;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--text);position:relative;}
-  .abtn .ic{font-size:18px;}
-  .abtn.milk{background:var(--milk-soft);} .abtn.formula{background:var(--formula-soft);} .abtn.pump{background:var(--pump-soft);}
-  .abtn.pee{background:var(--pee-soft);} .abtn.poop{background:var(--poop-soft);} .abtn.both{background:linear-gradient(135deg,var(--pee-soft),var(--poop-soft));}
-  .abtn.care{background:var(--care-soft);}
-  .abtn:active{transform:scale(0.97);}
-  .abtn .doneToday{position:absolute;top:6px;right:8px;font-size:10px;color:var(--care);font-family:'Inter',sans-serif;}
-  .abtn.overdue{outline:2px solid #e3a876;}
+  /* ---------- alerts ---------- */
+  .alert{background:rgba(232,160,106,.13);border-left:2px solid var(--alert);color:#f0c39a;
+    border-radius:10px;padding:10px 12px;font-size:12.5px;margin-bottom:7px;line-height:1.4;}
 
-  .panel{background:var(--surface);border-radius:16px;padding:14px;margin-bottom:14px;border:1px solid var(--line);}
-  .panel .ptitle{font-family:'Quicksand',sans-serif;font-weight:700;font-size:14px;margin-bottom:10px;}
-  .field{margin-bottom:10px;}
-  .field label{display:block;font-size:11.5px;color:var(--text-muted);margin-bottom:4px;}
-  .field input,.field select{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 10px;font-size:14px;font-family:'Inter',sans-serif;}
-  .field input:focus{outline:2px solid var(--formula);outline-offset:1px;}
-  .prow{display:flex;gap:8px;}
-  .prow .field{flex:1;}
-  .pactions{display:flex;gap:8px;margin-top:4px;}
-  .pactions button{flex:1;border:none;border-radius:10px;padding:10px;font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;cursor:pointer;}
-  .save-btn{background:var(--text);color:var(--bg);}
-  .cancel-btn{background:var(--surface-2);color:var(--text-muted);}
-  .delete-btn{background:#3a2222;color:var(--danger);}
+  /* ---------- date bar ---------- */
+  .dbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .dbar button{background:none;border:none;color:var(--muted);font-size:19px;padding:6px 12px;cursor:pointer;}
+  .dbarMid{text-align:center;}
+  .dbarDate{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;}
+  .dbarToday{font-size:10.5px;color:var(--milk);cursor:pointer;margin-top:2px;}
 
-  .timeline{display:flex;flex-direction:column;gap:8px;}
-  .tlabel{font-size:11.5px;color:var(--text-muted);margin:6px 2px 2px;}
-  .entry{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:10px 12px;}
-  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-  .dot.milk{background:var(--milk);} .dot.formula{background:var(--formula);} .dot.pump{background:var(--pump);}
-  .dot.pee{background:var(--pee);} .dot.poop{background:var(--poop);} .dot.both{background:linear-gradient(135deg,var(--pee),var(--poop));}
-  .dot.care{background:var(--care);}
-  .einfo{flex:1;min-width:0;}
-  .etype{font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px;}
-  .etime{font-size:11.5px;color:var(--text-muted);}
-  .eamt{font-family:'Quicksand',sans-serif;font-weight:700;font-size:13.5px;white-space:nowrap;}
-  .erow-actions{display:flex;gap:2px;}
-  .eedit,.edel{background:none;border:none;color:var(--text-muted);font-size:15px;padding:4px 6px;cursor:pointer;}
-  .empty{text-align:center;color:var(--text-muted);font-size:13px;padding:26px 10px;}
-  .note{font-size:11px;color:var(--text-muted);text-align:center;margin-top:16px;line-height:1.5;}
-  .configwarn{background:#4a2727;color:#f2b8b8;border-radius:12px;padding:12px;font-size:12.5px;line-height:1.6;margin-bottom:16px;}
+  /* ---------- stat row ---------- */
+  .stats{display:flex;gap:9px;margin-bottom:14px;}
+  .stat{flex:1;background:var(--surface);border-radius:var(--r);padding:12px 13px;}
+  .statLabel{font-size:10.5px;color:var(--muted);margin-bottom:5px;}
+  .statVal{font-family:'Fraunces',serif;font-weight:600;font-size:21px;line-height:1;letter-spacing:-0.5px;}
+  .statUnit{font-family:'Inter',sans-serif;font-size:11px;color:var(--muted);font-weight:400;margin-left:2px;}
+  .statSince{background:var(--surface);border-radius:var(--r);padding:13px 14px;margin-bottom:14px;
+    display:flex;justify-content:space-between;align-items:center;}
 
-  .growthList{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
-  .chartbox{background:var(--surface);border-radius:14px;padding:14px 10px;margin-bottom:14px;}
-  .chartTitle{font-size:11.5px;color:var(--text-muted);margin-bottom:8px;padding-left:4px;}
+  /* ---------- action buttons ---------- */
+  .acts{display:grid;gap:9px;margin-bottom:14px;}
+  .acts.c3{grid-template-columns:repeat(3,1fr);}
+  .act{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 6px;
+    display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;color:var(--text);
+    font-family:'Fraunces',serif;font-weight:600;font-size:12.5px;transition:transform .08s;}
+  .act:active{transform:scale(.96);}
+  .act .swatch{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;}
 
-  .careRow{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-radius:14px;padding:12px;margin-bottom:8px;}
-  .careRow .left{display:flex;align-items:center;gap:10px;}
-  .careRow .ic{font-size:20px;}
-  .careRow .ctitle{font-family:'Quicksand',sans-serif;font-weight:600;font-size:13.5px;}
-  .careRow .cmeta{font-size:11px;color:var(--text-muted);}
-  .logbtn{background:var(--care-soft);color:var(--care);border:none;border-radius:10px;padding:8px 12px;font-family:'Quicksand',sans-serif;font-weight:700;font-size:12px;cursor:pointer;}
+  /* ---------- panel ---------- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:14px;}
+  .panelTitle{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;margin-bottom:12px;}
+  .fld{margin-bottom:11px;}
+  .fld label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;}
+  .fld input,.fld select{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:11px;padding:11px 12px;font-size:15px;font-family:'Inter',sans-serif;}
+  .fld input:focus,.fld select:focus{outline:none;border-color:var(--milk);}
+  .row2{display:flex;gap:9px;}
+  .row2 .fld{flex:1;}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
+  .chip{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:20px;
+    padding:7px 13px;font-size:12.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .chip.on{background:var(--text);color:var(--ink);border-color:var(--text);font-weight:600;}
+  .pacts{display:flex;gap:8px;margin-top:3px;}
+  .pacts button{flex:1;border:none;border-radius:11px;padding:12px;font-family:'Fraunces',serif;
+    font-weight:600;font-size:13.5px;cursor:pointer;}
+  .bSave{background:var(--text);color:var(--ink);}
+  .bCancel{background:var(--surface-2);color:var(--muted);}
+  .bDel{background:rgba(224,133,133,.14);color:var(--danger);}
+  .toggleRow{display:flex;align-items:center;gap:9px;margin-bottom:11px;cursor:pointer;}
+  .toggleBox{width:19px;height:19px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);
+    display:grid;place-items:center;font-size:12px;color:var(--ink);flex-shrink:0;}
+  .toggleBox.on{background:var(--milk);border-color:var(--milk);}
+  .toggleLabel{font-size:13px;}
+
+  /* ---------- list ---------- */
+  .listLabel{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:16px 2px 9px;}
+  .item{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);}
+  .item:last-child{border-bottom:none;}
+  .bar{width:3px;height:30px;border-radius:2px;flex-shrink:0;}
+  .itemMid{flex:1;min-width:0;}
+  .itemName{font-family:'Fraunces',serif;font-weight:600;font-size:13.5px;}
+  .itemMeta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .itemVal{font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;white-space:nowrap;}
+  .itemBtns{display:flex;}
+  .itemBtns button{background:none;border:none;color:var(--muted);font-size:14px;padding:6px 5px;cursor:pointer;}
+  .blank{text-align:center;color:var(--muted);font-size:12.5px;padding:30px 12px;line-height:1.6;}
+
+  /* ---------- care ---------- */
+  .care{background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:9px;}
+  .careTop{display:flex;align-items:center;justify-content:space-between;gap:11px;}
+  .careL{display:flex;align-items:center;gap:11px;min-width:0;}
+  .careIc{width:34px;height:34px;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
+  .careIc.done{background:rgba(143,208,168,.18);}
+  .careName{font-family:'Fraunces',serif;font-weight:600;font-size:14px;}
+  .careMeta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .careMeta .late{color:var(--alert);}
+  .careAdd{background:var(--surface-2);border:1px solid var(--line);color:var(--text);border-radius:11px;
+    padding:9px 14px;font-family:'Fraunces',serif;font-weight:600;font-size:13px;cursor:pointer;flex-shrink:0;}
+  .careAdd.done{background:rgba(143,208,168,.15);border-color:rgba(143,208,168,.3);color:var(--care);}
+  .careBottom{display:flex;align-items:center;justify-content:space-between;margin-top:11px;
+    padding-top:11px;border-top:1px solid var(--line);}
+  .careTimes{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);}
+  .careTimes input{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:5px 8px;font-size:12px;font-family:'Inter',sans-serif;}
+  .careDots{display:flex;gap:4px;align-items:center;}
+  .careDot{width:7px;height:7px;border-radius:50%;background:var(--care);}
+  .careUndo{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;}
+
+  /* ---------- growth ---------- */
+  .chart{background:var(--surface);border-radius:var(--r);padding:15px 12px 12px;margin-bottom:14px;}
+  .chartHdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;padding:0 3px;}
+  .chartTitle{font-size:10.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+  .chartDelta{font-family:'Fraunces',serif;font-size:12.5px;color:var(--care);}
+  .birthTag{display:inline-block;background:rgba(242,201,138,.16);color:var(--milk);border-radius:5px;
+    padding:1px 6px;font-size:9.5px;margin-left:6px;font-family:'Inter',sans-serif;vertical-align:middle;}
+
+  /* ---------- tabbar ---------- */
+  .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(23,20,28,.93);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);display:flex;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+    max-width:460px;margin:0 auto;}
+  .tab{flex:1;background:none;border:none;color:var(--muted);padding:7px 2px;display:flex;flex-direction:column;
+    align-items:center;gap:4px;cursor:pointer;font-size:10px;font-family:'Inter',sans-serif;font-weight:500;}
+  .tab .ti{font-size:17px;opacity:.55;transition:opacity .15s;}
+  .tab.on{color:var(--text);}
+  .tab.on .ti{opacity:1;}
+  .tab.on::before{content:'';position:absolute;margin-top:-9px;width:16px;height:2px;border-radius:2px;background:var(--milk);}
 </style>
 </head>
 <body>
 
-<div class="wrap" id="loginScreen" style="display:none;">
-  <div class="top"><div class="brand"><div class="moon">🌙</div><div><h1>Bebek Takip</h1><div class="sub">Devam etmek için şifre girin</div></div></div></div>
-  <div class="panel">
-    <div class="field"><label>Şifre</label><input type="password" id="pinInput" placeholder="••••••••" autocomplete="current-password" /></div>
-    <div id="loginError" style="color:#f2b8b8;font-size:12.5px;margin-bottom:10px;display:none;">Şifre yanlış, tekrar deneyin.</div>
-    <div class="pactions"><button class="save-btn" id="loginBtn" style="flex:1;">Giriş yap</button></div>
+<div class="loginWrap" id="loginScreen" style="display:none;">
+  <div class="loginCard">
+    <div class="loginMoon">🌙</div>
+    <h1 class="loginTitle">Bebek Takip</h1>
+    <div class="loginSub">Devam etmek için şifre girin</div>
+    <input type="password" id="pinInput" placeholder="••••••••" autocomplete="current-password" />
+    <button id="loginBtn">Giriş yap</button>
+    <div class="loginErr" id="loginErr"></div>
   </div>
 </div>
 
-<div class="wrap" id="appScreen" style="display:none;">
-  <div class="top">
-    <div class="brand">
-      <div class="moon">🌙</div>
-      <div><h1>Bebek Takip</h1><div class="sub" id="loadingNote">Bağlanılıyor…</div></div>
+<div class="shell" id="appScreen" style="display:none;">
+  <div class="hdr">
+    <div class="hdrL">
+      <div class="hdrMoon">🌙</div>
+      <div>
+        <h1 class="hdrTitle">Bebek Takip</h1>
+        <div class="hdrSub" id="hdrSub">Bağlanılıyor…</div>
+      </div>
     </div>
-    <div class="topRight">
-      <button class="iconbtn" id="exportBtn" title="Yedek indir">⬇</button>
-      <div class="connbadge offline" id="connBadge"><div class="pulse"></div><span id="connText">Bağlanıyor</span></div>
+    <div class="hdrR">
+      <button class="ghost" id="exportBtn" title="Yedek indir">↓</button>
+      <div class="conn off" id="conn"></div>
     </div>
   </div>
-
-  <div id="configWarn" class="configwarn" style="display:none;">⚠️ Supabase yapılandırması eksik.</div>
-
-  <div class="reminders" id="reminders"></div>
-
-  <div id="tabContent"></div>
+  <div id="alerts"></div>
+  <div id="content"></div>
 </div>
 
-<div class="tabbar" id="tabbar" style="display:none;">
-  <button class="tabbtn" data-tab="feed"><span class="ic">🍼</span>Beslenme</button>
-  <button class="tabbtn" data-tab="diaper"><span class="ic">🧷</span>Bez</button>
-  <button class="tabbtn" data-tab="care"><span class="ic">💧</span>Bakım</button>
-  <button class="tabbtn" data-tab="growth"><span class="ic">📈</span>Büyüme</button>
+<div class="tabs" id="tabs" style="display:none;">
+  <button class="tab" data-tab="feed"><span class="ti">🍼</span>Beslenme</button>
+  <button class="tab" data-tab="diaper"><span class="ti">💧</span>Bez</button>
+  <button class="tab" data-tab="care"><span class="ti">🧴</span>Bakım</button>
+  <button class="tab" data-tab="growth"><span class="ti">📐</span>Büyüme</button>
 </div>
 
 <script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  const SUPABASE_URL = "https://mqsrnkzdfzstznfqflso.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
-  const SHARED_LOGIN_EMAIL = "aile@bebektakip.app";
-  const VAPID_PUBLIC_KEY = "BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
-  const isConfigured = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
-  if(!isConfigured) document.getElementById('configWarn').style.display = 'block';
+const SUPABASE_URL = "https://mqsrnkzdfzstznfqflso.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
+const LOGIN_EMAIL = "aile@bebektakip.app";
+const VAPID_PUBLIC_KEY = "BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
 
-  function urlBase64ToUint8Array(base64String){
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-    return outputArray;
-  }
+/* ===== date helpers — ALL LOCAL TIME (bug fix) ===== */
+function fmtDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function localDay(iso){ return fmtDate(new Date(iso)); }   // <-- was iso.slice(0,10) (UTC) => wrong day after midnight
+function today(){ return fmtDate(new Date()); }
+function isToday(iso){ return localDay(iso) === today(); }
+function dayLabel(ds){
+  const y=new Date(); y.setDate(y.getDate()-1);
+  const d=new Date(ds+'T00:00:00');
+  const base=d.toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'long'});
+  if(ds===today()) return 'Bugün · '+base;
+  if(ds===fmtDate(y)) return 'Dün · '+base;
+  return base;
+}
+function hhmm(iso){ return new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
+function ago(iso){
+  const m=Math.floor((Date.now()-new Date(iso).getTime())/60000);
+  if(m<1) return 'az önce';
+  if(m<60) return m+' dk önce';
+  const h=Math.floor(m/60), r=m%60;
+  return h+' sa'+(r?' '+r+' dk':'')+' önce';
+}
+function hoursSince(iso){ return (Date.now()-new Date(iso).getTime())/3600000; }
+function localInput(iso){
+  const d = iso ? new Date(iso) : new Date();
+  return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const $ = id => document.getElementById(id);
 
-  async function setupPushNotifications(){
-    if(!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-    try{
-      const reg = await navigator.serviceWorker.register('sw.js');
-      if(Notification.permission === 'default'){
-        await Notification.requestPermission();
+/* ===== meta ===== */
+const FEED = {
+  milk:   {name:'Anne Sütü', ic:'🤱', color:'var(--milk)'},
+  formula:{name:'Mama',      ic:'🍼', color:'var(--formula)'},
+  pump:   {name:'Sağma',     ic:'🫙', color:'var(--pump)'},
+};
+const DIAPER = {
+  pee: {name:'Çiş',      ic:'💧', color:'var(--pee)'},
+  poop:{name:'Kaka',     ic:'💩', color:'var(--poop)'},
+  both:{name:'İkisi de', ic:'🧷', color:'var(--poop)'},
+};
+const CARE = {
+  vitamin_d:    {name:'Vitamin D',       ic:'☀️', key:'reminder_vitamin_d_time',  daily:1},
+  eye_drops:    {name:'Göz Damlası',     ic:'👁️', key:'reminder_eye_drops_time',  daily:1},
+  nose_drops:   {name:'Burun Damlası',   ic:'💦', key:'reminder_nose_drops_time', daily:1},
+  nose_cleaning:{name:'Burun Temizliği', ic:'🧼', key:null,                       daily:null},
+};
+
+/* ===== state ===== */
+let entries=[], diapers=[], careLogs=[], growth=[], settings={};
+let tab='feed';
+let dsel={feed:today(), diaper:today()};
+let panel=null;
+let supabase;
+
+/* ===== signature: 24h rhythm strip ===== */
+function rhythmStrip(dateStr){
+  const marks=[];
+  entries.filter(e=>localDay(e.time)===dateStr).forEach(e=>marks.push({t:e.time,c:FEED[e.type].color}));
+  diapers.filter(d=>localDay(d.time)===dateStr).forEach(d=>marks.push({t:d.time,c:DIAPER[d.kind].color}));
+  const W=340,H=26;
+  const pos = iso => { const d=new Date(iso); return ((d.getHours()*60+d.getMinutes())/1440)*W; };
+  const nowX = dateStr===today() ? ((new Date().getHours()*60+new Date().getMinutes())/1440)*W : null;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;" preserveAspectRatio="none">
+    <rect x="0" y="${H/2-3}" width="${W}" height="6" rx="3" fill="var(--surface-2)"/>
+    ${[6,12,18].map(h=>`<line x1="${(h/24)*W}" y1="${H/2-6}" x2="${(h/24)*W}" y2="${H/2+6}" stroke="var(--line)" stroke-width="1"/>`).join('')}
+    ${nowX!==null?`<line x1="${nowX}" y1="2" x2="${nowX}" y2="${H-2}" stroke="var(--text)" stroke-width="1" opacity=".35"/>`:''}
+    ${marks.map(m=>`<rect x="${pos(m.t)-1.5}" y="${H/2-9}" width="3" height="18" rx="1.5" fill="${m.c}"/>`).join('')}
+  </svg>
+  <div class="rhythmTicks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>`;
+}
+
+/* ===== date bar ===== */
+function dateBar(section){
+  const ds=dsel[section];
+  return `<div class="dbar">
+    <button data-a="prev" data-s="${section}">‹</button>
+    <div class="dbarMid">
+      <div class="dbarDate">${dayLabel(ds)}</div>
+      ${ds!==today()?`<div class="dbarToday" data-a="today" data-s="${section}">bugüne dön</div>`:''}
+    </div>
+    <button data-a="next" data-s="${section}">›</button>
+  </div>`;
+}
+
+/* ===== FEED ===== */
+function viewFeed(){
+  const ds=dsel.feed;
+  const day=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const sum=t=>day.filter(e=>e.type===t).reduce((s,e)=>s+e.amount,0);
+  const all=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const lastFeed=all.find(e=>e.type!=='pump');
+  const lastPump=all.find(e=>e.type==='pump');
+  const feedCount=day.filter(e=>e.type!=='pump').length;
+
+  return dateBar('feed')+`
+    <div class="rhythm">
+      <div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
+      <div class="rhythmCount">${feedCount} beslenme</div></div>
+      ${rhythmStrip(ds)}
+    </div>
+    <div class="statSince">
+      <div><div class="statLabel">Son beslenme</div><div class="statVal" style="font-size:17px;">${lastFeed?ago(lastFeed.time):'—'}</div></div>
+      <div style="text-align:right;"><div class="statLabel">Son sağma</div><div class="statVal" style="font-size:17px;">${lastPump?ago(lastPump.time):'—'}</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="statLabel">Anne sütü</div><div class="statVal">${sum('milk')}<span class="statUnit">cc</span></div></div>
+      <div class="stat"><div class="statLabel">Mama</div><div class="statVal">${sum('formula')}<span class="statUnit">cc</span></div></div>
+      <div class="stat"><div class="statLabel">Sağılan</div><div class="statVal">${sum('pump')}<span class="statUnit">cc</span></div></div>
+    </div>
+    <div class="acts c3">
+      ${Object.entries(FEED).map(([k,m])=>`<button class="act" data-a="newFeed" data-t="${k}">
+        <span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}
+    </div>
+    <div id="panelSlot">${panel&&panel.s==='feed'?panelFeed():''}</div>
+    ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(e=>{
+      const m=FEED[e.type];
+      return `<div class="item"><div class="bar" style="background:${m.color}"></div>
+        <div class="itemMid"><div class="itemName">${m.name}</div><div class="itemMeta">${hhmm(e.time)} · ${ago(e.time)}</div></div>
+        <div class="itemVal">${e.amount}<span class="statUnit">cc</span></div>
+        <div class="itemBtns"><button data-a="editFeed" data-id="${e.id}">✎</button>
+        <button data-a="delFeed" data-id="${e.id}">✕</button></div></div>`;
+    }).join(''):`<div class="blank">Bu gün için kayıt yok.</div>`}`;
+}
+function panelFeed(){
+  const ed=panel.id?entries.find(e=>e.id===panel.id):null;
+  const type=ed?ed.type:panel.t;
+  return `<div class="panel">
+    <div class="panelTitle">${FEED[type].name} ${ed?'düzenle':'kaydı'}</div>
+    <div class="chips">${Object.entries(FEED).map(([k,m])=>
+      `<div class="chip ${k===type?'on':''}" data-a="pickFeedType" data-t="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
+    <div class="row2">
+      <div class="fld"><label>Miktar (cc)</label><input type="number" id="fAmt" inputmode="numeric" min="0" step="5" value="${ed?ed.amount:''}" placeholder="60"/></div>
+      <div class="fld"><label>Saat</label><input type="datetime-local" id="fTime" value="${localInput(ed?ed.time:null)}"/></div>
+    </div>
+    <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
+      ${ed?`<button class="bDel" data-a="delFeed" data-id="${ed.id}">Sil</button>`:''}
+      <button class="bSave" data-a="saveFeed">Kaydet</button></div>
+  </div>`;
+}
+
+/* ===== DIAPER ===== */
+function viewDiaper(){
+  const ds=dsel.diaper;
+  const day=diapers.filter(d=>localDay(d.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  const pee=day.filter(d=>d.kind!=='poop').length;
+  const poop=day.filter(d=>d.kind!=='pee').length;
+  const last=[...diapers].sort((a,b)=>new Date(b.time)-new Date(a.time))[0];
+
+  return dateBar('diaper')+`
+    <div class="rhythm">
+      <div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
+      <div class="rhythmCount">${day.length} değişim</div></div>
+      ${rhythmStrip(ds)}
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="statLabel">Son değişim</div><div class="statVal" style="font-size:16px;">${last?ago(last.time):'—'}</div></div>
+      <div class="stat"><div class="statLabel">Çiş</div><div class="statVal">${pee}</div></div>
+      <div class="stat"><div class="statLabel">Kaka</div><div class="statVal">${poop}</div></div>
+    </div>
+    <div class="acts c3">
+      ${Object.entries(DIAPER).map(([k,m])=>`<button class="act" data-a="quickDiaper" data-k="${k}">
+        <span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}
+    </div>
+    <div id="panelSlot">${panel&&panel.s==='diaper'?panelDiaper():''}</div>
+    ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(d=>{
+      const m=DIAPER[d.kind];
+      return `<div class="item"><div class="bar" style="background:${m.color}"></div>
+        <div class="itemMid"><div class="itemName">${m.name}</div><div class="itemMeta">${hhmm(d.time)} · ${ago(d.time)}</div></div>
+        <div class="itemBtns"><button data-a="editDiaper" data-id="${d.id}">✎</button>
+        <button data-a="delDiaper" data-id="${d.id}">✕</button></div></div>`;
+    }).join(''):`<div class="blank">Bu gün için kayıt yok.<br>Yukarıdan tek dokunuşla ekleyin.</div>`}`;
+}
+function panelDiaper(){
+  const ed=diapers.find(d=>d.id===panel.id);
+  if(!ed) return '';
+  return `<div class="panel">
+    <div class="panelTitle">Bez kaydı düzenle</div>
+    <div class="chips">${Object.entries(DIAPER).map(([k,m])=>
+      `<div class="chip ${k===panel.k?'on':''}" data-a="pickDiaperKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
+    <div class="fld"><label>Saat</label><input type="datetime-local" id="dTime" value="${localInput(ed.time)}"/></div>
+    <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
+      <button class="bDel" data-a="delDiaper" data-id="${ed.id}">Sil</button>
+      <button class="bSave" data-a="saveDiaper">Kaydet</button></div>
+  </div>`;
+}
+
+/* ===== CARE ===== */
+function careToday(kind){ return careLogs.filter(c=>c.kind===kind&&isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
+function viewCare(){
+  const rows=Object.entries(CARE).map(([kind,m])=>{
+    const list=careToday(kind);
+    const n=list.length;
+    const target=m.key?settings[m.key]:null;
+    const done=m.daily?n>=m.daily:n>0;
+    let meta;
+    if(m.daily){
+      if(n>0) meta=`Bugün yapıldı · ${hhmm(list[0].time)}`;
+      else {
+        const [h,mi]=(target||'09:00').split(':').map(Number);
+        const t=new Date(); t.setHours(h,mi,0,0);
+        meta = Date.now()>t.getTime()
+          ? `<span class="late">Saati geçti — henüz yapılmadı</span>`
+          : `Bugün için planlandı`;
       }
-      if(Notification.permission !== 'granted') return;
-      let sub = await reg.pushManager.getSubscription();
-      if(!sub){
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-        });
-      }
-      const json = sub.toJSON();
-      await supabase.from('push_subscriptions').upsert(
-        { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
-        { onConflict: 'endpoint' }
-      );
-    }catch(err){ console.error('Push kurulum hatası', err); }
-  }
-
-  // ---------- helpers ----------
-  function fmtDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
-  function dateLabelFor(dateStr){
-    const today = fmtDate(new Date());
-    const y = new Date(); y.setDate(y.getDate()-1);
-    const yesterday = fmtDate(y);
-    const d = new Date(dateStr+'T00:00:00');
-    let base = d.toLocaleDateString('tr-TR', {day:'numeric', month:'long', weekday:'long'});
-    if(dateStr===today) return 'Bugün · '+base;
-    if(dateStr===yesterday) return 'Dün · '+base;
-    return base;
-  }
-  function timeStr(iso){ return new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
-  function agoStr(iso){
-    const mins = Math.floor((Date.now() - new Date(iso).getTime())/60000);
-    if(mins < 1) return 'az önce';
-    if(mins < 60) return mins+' dk önce';
-    const h = Math.floor(mins/60), m = mins%60;
-    return h+' sa'+(m?' '+m+' dk':'')+' önce';
-  }
-  function hoursAgo(iso){ return (Date.now() - new Date(iso).getTime())/3600000; }
-  function nowLocalInputValue(){ const d = new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,16); }
-  function todayStr(){ return fmtDate(new Date()); }
-  function isToday(iso){ return iso.slice(0,10) === todayStr(); }
-  function el(id){ return document.getElementById(id); }
-
-  // ---------- state ----------
-  let entries = [], diapers = [], careLogs = [], growth = [], settings = {};
-  let activeTab = 'feed';
-  let selectedDate = { feed: fmtDate(new Date()), diaper: fmtDate(new Date()) };
-  let openPanel = null;      // {section, type, editingId}
-  let notified = {};          // dedupe local notifications per key
-
-  const FEED_META = { milk:{label:'Anne Sütü',dot:'milk',ic:'🤱'}, formula:{label:'Mama',dot:'formula',ic:'🍼'}, pump:{label:'Sağma',dot:'pump',ic:'🫙'} };
-  const DIAPER_META = { pee:{label:'Çiş',dot:'pee',ic:'💧'}, poop:{label:'Kaka',dot:'poop',ic:'💩'}, both:{label:'İkisi de',dot:'both',ic:'🧷'} };
-  const CARE_META = {
-    vitamin_d:{label:'Vitamin D', ic:'☀️', settingKey:'reminder_vitamin_d_time'},
-    eye_drops:{label:'Göz Damlası', ic:'👁️', settingKey:'reminder_eye_drops_time'},
-    nose_drops:{label:'Burun Damlası', ic:'💦', settingKey:'reminder_nose_drops_time'},
-    nose_cleaning:{label:'Burun Temizliği', ic:'🧼', settingKey:null},
-  };
-
-  // ================= RENDER: TABS =================
-  function renderTabbar(){
-    document.querySelectorAll('.tabbtn').forEach(b=>{
-      b.classList.toggle('active', b.dataset.tab === activeTab);
-    });
-  }
-
-  function render(){
-    renderTabbar();
-    renderReminders();
-    const host = el('tabContent');
-    if(activeTab==='feed') host.innerHTML = tplFeed();
-    else if(activeTab==='diaper') host.innerHTML = tplDiaper();
-    else if(activeTab==='care') host.innerHTML = tplCare();
-    else if(activeTab==='growth') host.innerHTML = tplGrowth();
-    wireTabEvents();
-  }
-
-  // ================= FEED TAB =================
-  function tplFeed(){
-    const dateStr = selectedDate.feed;
-    const dayEntries = entries.filter(e=>e.time.slice(0,10)===dateStr).sort((a,b)=> new Date(b.time)-new Date(a.time));
-    const totalMilk = dayEntries.filter(e=>e.type==='milk').reduce((s,e)=>s+e.amount,0);
-    const totalFormula = dayEntries.filter(e=>e.type==='formula').reduce((s,e)=>s+e.amount,0);
-    const totalPump = dayEntries.filter(e=>e.type==='pump').reduce((s,e)=>s+e.amount,0);
-    const allSorted = [...entries].sort((a,b)=> new Date(b.time)-new Date(a.time));
-    const lastFeed = allSorted.find(e=>e.type==='milk'||e.type==='formula');
-    const lastPump = allSorted.find(e=>e.type==='pump');
-
-    return `
-      <div class="datebar">
-        <button data-act="prevDate" data-section="feed">‹</button>
-        <div><div class="datelabel">${dateLabelFor(dateStr)}</div>${dateStr!==todayStr()?`<div class="today-pill" data-act="today" data-section="feed">bugüne dön</div>`:''}</div>
-        <button data-act="nextDate" data-section="feed">›</button>
-      </div>
-      <div class="summary">
-        <div class="scard wide">
-          <div><div class="label">Son beslenme</div><div class="val">${lastFeed?agoStr(lastFeed.time):'—'}</div></div>
-          <div style="text-align:right;"><div class="label">Son sağma</div><div class="val">${lastPump?agoStr(lastPump.time):'—'}</div></div>
-        </div>
-        <div class="scard"><div class="label">Anne sütü (gün)</div><div class="val">${totalMilk} cc</div></div>
-        <div class="scard"><div class="label">Mama (gün)</div><div class="val">${totalFormula} cc</div></div>
-        <div class="scard wide"><div class="label">Sağılan (gün)</div><div class="val">${totalPump} cc</div></div>
-      </div>
-      <div class="actions cols3">
-        <button class="abtn milk" data-act="openFeed" data-type="milk"><span class="ic">🤱</span>Anne Sütü</button>
-        <button class="abtn formula" data-act="openFeed" data-type="formula"><span class="ic">🍼</span>Mama</button>
-        <button class="abtn pump" data-act="openFeed" data-type="pump"><span class="ic">🫙</span>Sağma</button>
-      </div>
-      <div id="panelHost">${openPanel && openPanel.section==='feed' ? panelFeed() : ''}</div>
-      <div class="timeline">${dayEntries.length===0 ? `<div class="empty">Bu gün için kayıt yok.</div>` :
-        `<div class="tlabel">Gün içindeki kayıtlar</div>` + dayEntries.map(e=>{
-          const m = FEED_META[e.type];
-          return `<div class="entry">
-            <div class="dot ${m.dot}"></div>
-            <div class="einfo"><div class="etype">${m.label}</div><div class="etime">${timeStr(e.time)} · ${agoStr(e.time)}</div></div>
-            <div class="eamt">${e.amount} cc</div>
-            <div class="erow-actions">
-              <button class="eedit" data-act="editFeed" data-id="${e.id}">✎</button>
-              <button class="edel" data-act="delFeed" data-id="${e.id}">✕</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }
-  function panelFeed(){
-    const editing = openPanel.editingId ? entries.find(e=>e.id===openPanel.editingId) : null;
-    const type = openPanel.type;
-    const m = FEED_META[type];
-    const amt = editing ? editing.amount : '';
-    const timeVal = editing ? new Date(new Date(editing.time).getTime() - new Date(editing.time).getTimezoneOffset()*60000).toISOString().slice(0,16) : nowLocalInputValue();
-    return `<div class="panel">
-      <div class="ptitle">${m.label} ${editing?'düzenle':'kaydı ekle'}</div>
-      <div class="prow">
-        <div class="field"><label>Miktar (cc)</label><input type="number" id="amtInput" min="0" step="5" value="${amt}" placeholder="ör. 60" /></div>
-        <div class="field"><label>Saat</label><input type="datetime-local" id="timeInput" value="${timeVal}" /></div>
-      </div>
-      <div class="pactions">
-        <button class="cancel-btn" data-act="closePanel">Vazgeç</button>
-        ${editing?`<button class="delete-btn" data-act="delFeed" data-id="${editing.id}">Sil</button>`:''}
-        <button class="save-btn" data-act="saveFeed">Kaydet</button>
-      </div>
-    </div>`;
-  }
-
-  // ================= DIAPER TAB =================
-  function tplDiaper(){
-    const dateStr = selectedDate.diaper;
-    const dayEntries = diapers.filter(d=>d.time.slice(0,10)===dateStr).sort((a,b)=> new Date(b.time)-new Date(a.time));
-    const peeCount = dayEntries.filter(d=>d.kind==='pee'||d.kind==='both').length;
-    const poopCount = dayEntries.filter(d=>d.kind==='poop'||d.kind==='both').length;
-    const last = [...diapers].sort((a,b)=> new Date(b.time)-new Date(a.time))[0];
-    return `
-      <div class="datebar">
-        <button data-act="prevDate" data-section="diaper">‹</button>
-        <div><div class="datelabel">${dateLabelFor(dateStr)}</div>${dateStr!==todayStr()?`<div class="today-pill" data-act="today" data-section="diaper">bugüne dön</div>`:''}</div>
-        <button data-act="nextDate" data-section="diaper">›</button>
-      </div>
-      <div class="summary">
-        <div class="scard wide"><div><div class="label">Son değişim</div><div class="val">${last?agoStr(last.time):'—'}</div></div></div>
-        <div class="scard"><div class="label">Çiş (gün)</div><div class="val">${peeCount}</div></div>
-        <div class="scard"><div class="label">Kaka (gün)</div><div class="val">${poopCount}</div></div>
-      </div>
-      <div class="actions cols3">
-        <button class="abtn pee" data-act="quickDiaper" data-kind="pee"><span class="ic">💧</span>Çiş</button>
-        <button class="abtn poop" data-act="quickDiaper" data-kind="poop"><span class="ic">💩</span>Kaka</button>
-        <button class="abtn both" data-act="quickDiaper" data-kind="both"><span class="ic">🧷</span>İkisi de</button>
-      </div>
-      <div id="panelHost">${openPanel && openPanel.section==='diaper' ? panelDiaper() : ''}</div>
-      <div class="timeline">${dayEntries.length===0 ? `<div class="empty">Bu gün için kayıt yok.</div>` :
-        `<div class="tlabel">Gün içindeki kayıtlar</div>` + dayEntries.map(d=>{
-          const m = DIAPER_META[d.kind];
-          return `<div class="entry">
-            <div class="dot ${m.dot}"></div>
-            <div class="einfo"><div class="etype">${m.label}</div><div class="etime">${timeStr(d.time)} · ${agoStr(d.time)}</div></div>
-            <div class="erow-actions">
-              <button class="eedit" data-act="editDiaper" data-id="${d.id}">✎</button>
-              <button class="edel" data-act="delDiaper" data-id="${d.id}">✕</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`;
-  }
-  function panelDiaper(){
-    const editing = openPanel.editingId ? diapers.find(d=>d.id===openPanel.editingId) : null;
-    const kind = editing ? editing.kind : openPanel.kind;
-    const timeVal = editing ? new Date(new Date(editing.time).getTime() - new Date(editing.time).getTimezoneOffset()*60000).toISOString().slice(0,16) : nowLocalInputValue();
-    return `<div class="panel">
-      <div class="ptitle">${DIAPER_META[kind].label} ${editing?'düzenle':'kaydı'}</div>
-      <div class="prow">
-        <div class="field"><label>Tür</label>
-          <select id="kindInput">
-            ${Object.entries(DIAPER_META).map(([k,m])=>`<option value="${k}" ${k===kind?'selected':''}>${m.label}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field"><label>Saat</label><input type="datetime-local" id="timeInput" value="${timeVal}" /></div>
-      </div>
-      <div class="pactions">
-        <button class="cancel-btn" data-act="closePanel">Vazgeç</button>
-        ${editing?`<button class="delete-btn" data-act="delDiaper" data-id="${editing.id}">Sil</button>`:''}
-        <button class="save-btn" data-act="saveDiaper">Kaydet</button>
-      </div>
-    </div>`;
-  }
-
-  // ================= CARE TAB =================
-  function todayCareCount(kind){ return careLogs.filter(c=>c.kind===kind && isToday(c.time)).length; }
-  function lastCareToday(kind){ return careLogs.filter(c=>c.kind===kind && isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time))[0]; }
-  function tplCare(){
-    const rows = Object.entries(CARE_META).map(([kind, m])=>{
-      const count = todayCareCount(kind);
-      const last = lastCareToday(kind);
-      const targetTime = m.settingKey ? settings[m.settingKey] : null;
-      let overdueNote = '';
-      if(targetTime && count===0){
-        const [hh,mm] = targetTime.split(':').map(Number);
-        const target = new Date(); target.setHours(hh,mm,0,0);
-        if(Date.now() > target.getTime()) overdueNote = `<span style="color:#e3a876;">saatini geçti (${targetTime})</span>`;
-        else overdueNote = `bugün henüz yapılmadı · ${targetTime}'de hatırlatılacak`;
-      } else if(targetTime){
-        overdueNote = `bugün ${count} kez · hedef saat ${targetTime}`;
-      } else {
-        overdueNote = count>0 ? `bugün ${count} kez` : 'bugün henüz yapılmadı';
-      }
-      return `<div class="careRow">
-        <div class="left">
-          <div class="ic">${m.ic}</div>
-          <div>
-            <div class="ctitle">${m.label}</div>
-            <div class="cmeta">${last?`son: ${timeStr(last.time)} · `:''}${overdueNote}</div>
-          </div>
-        </div>
-        <button class="logbtn" data-act="logCare" data-kind="${kind}">+ Kaydet</button>
-      </div>`;
-    }).join('');
-
-    const todayLogs = careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
-    return `
-      <div class="chartbox"><div class="chartTitle">Bugünkü bakım</div>${rows}</div>
-      <div class="timeline">${todayLogs.length===0? `<div class="empty">Bugün için bakım kaydı yok.</div>` :
-        `<div class="tlabel">Bugünkü kayıtlar</div>` + todayLogs.map(c=>{
-          const m = CARE_META[c.kind];
-          return `<div class="entry">
-            <div class="dot care"></div>
-            <div class="einfo"><div class="etype">${m.label}</div><div class="etime">${timeStr(c.time)} · ${agoStr(c.time)}</div></div>
-            <div class="erow-actions"><button class="edel" data-act="delCare" data-id="${c.id}">✕</button></div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div class="note">Hatırlatma saatlerini değiştirmek isterseniz haber verin.</div>`;
-  }
-
-  // ================= GROWTH TAB =================
-  function tplGrowth(){
-    const sorted = [...growth].sort((a,b)=> new Date(a.measured_on)-new Date(b.measured_on));
-    const chart = sorted.length>=2 ? buildGrowthChart(sorted) : `<div class="empty">Eğri için en az 2 ölçüm gerekiyor.</div>`;
-    const listSorted = [...growth].sort((a,b)=> new Date(b.measured_on)-new Date(a.measured_on));
-    return `
-      <div class="actions cols4" style="grid-template-columns:1fr;">
-        <button class="abtn care" data-act="openGrowth"><span class="ic">📏</span>Ölçüm Ekle</button>
-      </div>
-      <div id="panelHost">${openPanel && openPanel.section==='growth' ? panelGrowth() : ''}</div>
-      <div class="chartbox">
-        <div class="chartTitle">Kilo (kg) — zaman içinde</div>
-        ${chart}
-      </div>
-      <div class="growthList">${listSorted.length===0? `<div class="empty">Henüz ölçüm yok.</div>` :
-        listSorted.map(g=>`<div class="entry">
-          <div class="dot care"></div>
-          <div class="einfo"><div class="etype">${new Date(g.measured_on+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}</div>
-          <div class="etime">${g.weight_kg?g.weight_kg+' kg':''}${g.weight_kg&&g.height_cm?' · ':''}${g.height_cm?g.height_cm+' cm':''}</div></div>
-          <div class="erow-actions">
-            <button class="eedit" data-act="editGrowth" data-id="${g.id}">✎</button>
-            <button class="edel" data-act="delGrowth" data-id="${g.id}">✕</button>
-          </div>
-        </div>`).join('')}
-      </div>`;
-  }
-  function panelGrowth(){
-    const editing = openPanel.editingId ? growth.find(g=>g.id===openPanel.editingId) : null;
-    return `<div class="panel">
-      <div class="ptitle">Ölçüm ${editing?'düzenle':'ekle'}</div>
-      <div class="prow">
-        <div class="field"><label>Kilo (kg)</label><input type="number" step="0.01" id="weightInput" value="${editing&&editing.weight_kg!=null?editing.weight_kg:''}" placeholder="ör. 4.2" /></div>
-        <div class="field"><label>Boy (cm)</label><input type="number" step="0.1" id="heightInput" value="${editing&&editing.height_cm!=null?editing.height_cm:''}" placeholder="ör. 55" /></div>
-      </div>
-      <div class="field"><label>Tarih</label><input type="date" id="dateInput" value="${editing?editing.measured_on:todayStr()}" /></div>
-      <div class="pactions">
-        <button class="cancel-btn" data-act="closePanel">Vazgeç</button>
-        ${editing?`<button class="delete-btn" data-act="delGrowth" data-id="${editing.id}">Sil</button>`:''}
-        <button class="save-btn" data-act="saveGrowth">Kaydet</button>
-      </div>
-    </div>`;
-  }
-  function buildGrowthChart(sorted){
-    const withWeight = sorted.filter(g=>g.weight_kg!=null);
-    if(withWeight.length<2) return `<div class="empty">Eğri için en az 2 kilo ölçümü gerekiyor.</div>`;
-    const w = 320, h = 120, padL=30, padR=10, padT=10, padB=20;
-    const xs = withWeight.map(g=>new Date(g.measured_on).getTime());
-    const ys = withWeight.map(g=>g.weight_kg);
-    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys)-0.2, maxY=Math.max(...ys)+0.2;
-    const px = x => padL + (maxX===minX?0:(x-minX)/(maxX-minX))*(w-padL-padR);
-    const py = y => (h-padB) - ((y-minY)/(maxY-minY))*(h-padT-padB);
-    const points = withWeight.map(g=>`${px(new Date(g.measured_on).getTime())},${py(g.weight_kg)}`).join(' ');
-    const dots = withWeight.map(g=>`<circle cx="${px(new Date(g.measured_on).getTime())}" cy="${py(g.weight_kg)}" r="3" fill="#f6c453"/>`).join('');
-    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;">
-      <polyline points="${points}" fill="none" stroke="#f6c453" stroke-width="2" />
-      ${dots}
-      <text x="${padL}" y="${h-4}" fill="#8b93ac" font-size="9">${new Date(minX).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
-      <text x="${w-padR}" y="${h-4}" fill="#8b93ac" font-size="9" text-anchor="end">${new Date(maxX).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
-    </svg>`;
-  }
-
-  // ================= REMINDERS =================
-  function renderReminders(){
-    const items = [];
-    const feedHours = parseFloat(settings.reminder_feed_hours || '2');
-    const lastFeed = [...entries].sort((a,b)=> new Date(b.time)-new Date(a.time)).find(e=>e.type==='milk'||e.type==='formula');
-    if(lastFeed && hoursAgo(lastFeed.time) >= feedHours){
-      items.push({key:'feed', text:`Son beslenmeden ${Math.floor(hoursAgo(lastFeed.time))} saatten fazla geçti`});
-    } else if(!lastFeed){
-      items.push({key:'feed-none', text:`Henüz beslenme kaydı yok`});
+    } else {
+      meta = n>0 ? `Bugün ${n} kez · son ${hhmm(list[0].time)}` : 'Bugün henüz yapılmadı';
     }
-    Object.entries(CARE_META).forEach(([kind,m])=>{
-      if(!m.settingKey) return;
-      const target = settings[m.settingKey];
-      if(!target) return;
-      const count = todayCareCount(kind);
-      if(count===0){
-        const [hh,mm] = target.split(':').map(Number);
-        const t = new Date(); t.setHours(hh,mm,0,0);
-        if(Date.now() > t.getTime()) items.push({key:kind, text:`${m.label} bugün henüz yapılmadı (hedef saat ${target})`});
-      }
-    });
-    el('reminders').innerHTML = items.map(i=>`<div class="reminder">⏰ ${i.text}</div>`).join('');
-    // browser notifications (only while tab open/foreground-ish)
-    items.forEach(i=>{
-      if(!notified[i.key] && window.Notification && Notification.permission==='granted'){
-        try{ new Notification('Bebek Takip', { body: i.text }); }catch(e){}
-        notified[i.key] = true;
-      }
-    });
+    return `<div class="care">
+      <div class="careTop">
+        <div class="careL">
+          <div class="careIc ${done?'done':''}">${m.ic}</div>
+          <div style="min-width:0;"><div class="careName">${m.name}</div><div class="careMeta">${meta}</div></div>
+        </div>
+        <button class="careAdd ${done?'done':''}" data-a="logCare" data-k="${kind}">${done&&m.daily?'✓ Yapıldı':'+ Kaydet'}</button>
+      </div>
+      <div class="careBottom">
+        ${m.key
+          ? `<div class="careTimes">Hatırlatma <input type="time" value="${target||'09:00'}" data-a="setTime" data-key="${m.key}"/></div>`
+          : `<div class="careDots">${n?Array.from({length:Math.min(n,8)}).map(()=>`<span class="careDot"></span>`).join(''):'<span style="font-size:11px;color:var(--muted)">kayıt yok</span>'}${n>8?`<span style="font-size:11px;color:var(--muted);margin-left:3px;">+${n-8}</span>`:''}</div>`}
+        ${n?`<button class="careUndo" data-a="undoCare" data-id="${list[0].id}">son kaydı geri al</button>`:'<span></span>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  const log=careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  return rows + (log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
+    `<div class="item"><div class="bar" style="background:var(--care)"></div>
+      <div class="itemMid"><div class="itemName">${CARE[c.kind].name}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
+      <div class="itemBtns"><button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
+    :`<div class="blank">Bugün için bakım kaydı yok.</div>`);
+}
+
+/* ===== GROWTH ===== */
+function viewGrowth(){
+  const sorted=[...growth].sort((a,b)=>new Date(a.measured_on)-new Date(b.measured_on));
+  const birth=growth.find(g=>g.is_birth);
+  const latest=sorted[sorted.length-1];
+  let delta='';
+  if(birth&&latest&&birth.id!==latest.id&&birth.weight_kg&&latest.weight_kg){
+    const d=(latest.weight_kg-birth.weight_kg).toFixed(2);
+    delta=`Doğumdan beri ${d>0?'+':''}${d} kg`;
   }
+  const desc=[...growth].sort((a,b)=>new Date(b.measured_on)-new Date(a.measured_on));
+  return `
+    <div class="acts" style="grid-template-columns:1fr;">
+      <button class="act" data-a="newGrowth"><span class="swatch" style="background:var(--care)22;">📐</span>Ölçüm Ekle</button>
+    </div>
+    <div id="panelSlot">${panel&&panel.s==='growth'?panelGrowth():''}</div>
+    <div class="chart">
+      <div class="chartHdr"><div class="chartTitle">Kilo eğrisi</div><div class="chartDelta">${delta}</div></div>
+      ${weightChart(sorted)}
+    </div>
+    ${!birth?`<div class="alert">Doğum kilosunu ekleyin — eğri oradan başlasın, büyüme daha sağlıklı takip edilir.</div>`:''}
+    ${desc.length?`<div class="listLabel">Ölçümler</div>`+desc.map(g=>
+      `<div class="item"><div class="bar" style="background:${g.is_birth?'var(--milk)':'var(--care)'}"></div>
+        <div class="itemMid">
+          <div class="itemName">${new Date(g.measured_on+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}${g.is_birth?'<span class="birthTag">DOĞUM</span>':''}</div>
+          <div class="itemMeta">${g.weight_kg?g.weight_kg+' kg':''}${g.weight_kg&&g.height_cm?' · ':''}${g.height_cm?g.height_cm+' cm':''}</div>
+        </div>
+        <div class="itemBtns"><button data-a="editGrowth" data-id="${g.id}">✎</button>
+        <button data-a="delGrowth" data-id="${g.id}">✕</button></div></div>`).join('')
+      :`<div class="blank">Henüz ölçüm yok.</div>`}`;
+}
+function weightChart(sorted){
+  const pts=sorted.filter(g=>g.weight_kg!=null);
+  if(pts.length<2) return `<div class="blank" style="padding:22px 10px;">Eğri için en az 2 kilo ölçümü gerekiyor.${pts.length===1?'<br>Bir ölçüm daha ekleyin.':''}</div>`;
+  const W=320,H=130,L=34,R=8,T=12,B=22;
+  const xs=pts.map(g=>new Date(g.measured_on).getTime());
+  const ys=pts.map(g=>g.weight_kg);
+  const x0=Math.min(...xs),x1=Math.max(...xs);
+  const pad=(Math.max(...ys)-Math.min(...ys))*0.15||0.3;
+  const y0=Math.min(...ys)-pad, y1=Math.max(...ys)+pad;
+  const px=v=>L+(x1===x0?0:(v-x0)/(x1-x0))*(W-L-R);
+  const py=v=>(H-B)-((v-y0)/(y1-y0))*(H-T-B);
+  const line=pts.map(g=>`${px(new Date(g.measured_on).getTime())},${py(g.weight_kg)}`).join(' ');
+  const area=`${L},${H-B} ${line} ${px(x1)},${H-B}`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--milk)" stop-opacity=".22"/>
+      <stop offset="100%" stop-color="var(--milk)" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="${area}" fill="url(#wg)"/>
+    <polyline points="${line}" fill="none" stroke="var(--milk)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map(g=>`<circle cx="${px(new Date(g.measured_on).getTime())}" cy="${py(g.weight_kg)}" r="${g.is_birth?4:3}"
+      fill="${g.is_birth?'var(--ink)':'var(--milk)'}" stroke="var(--milk)" stroke-width="${g.is_birth?2:0}"/>`).join('')}
+    <text x="2" y="${py(y1)+4}" fill="var(--muted)" font-size="9">${y1.toFixed(1)}</text>
+    <text x="2" y="${py(y0)+4}" fill="var(--muted)" font-size="9">${y0.toFixed(1)}</text>
+    <text x="${L}" y="${H-5}" fill="var(--muted)" font-size="9">${new Date(x0).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
+    <text x="${W-R}" y="${H-5}" fill="var(--muted)" font-size="9" text-anchor="end">${new Date(x1).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}</text>
+  </svg>`;
+}
+function panelGrowth(){
+  const ed=panel.id?growth.find(g=>g.id===panel.id):null;
+  const isBirth = ed ? ed.is_birth : !!panel.birth;
+  const hasBirth = growth.some(g=>g.is_birth && (!ed || g.id!==ed.id));
+  return `<div class="panel">
+    <div class="panelTitle">Ölçüm ${ed?'düzenle':'ekle'}</div>
+    ${!hasBirth?`<div class="toggleRow" data-a="toggleBirth">
+      <div class="toggleBox ${isBirth?'on':''}">${isBirth?'✓':''}</div>
+      <div class="toggleLabel">Bu doğum ölçümü</div></div>`:''}
+    <div class="row2">
+      <div class="fld"><label>Kilo (kg)</label><input type="number" id="gW" inputmode="decimal" step="0.01" value="${ed&&ed.weight_kg!=null?ed.weight_kg:''}" placeholder="4.20"/></div>
+      <div class="fld"><label>Boy (cm)</label><input type="number" id="gH" inputmode="decimal" step="0.1" value="${ed&&ed.height_cm!=null?ed.height_cm:''}" placeholder="55"/></div>
+    </div>
+    <div class="fld"><label>${isBirth?'Doğum tarihi':'Ölçüm tarihi'}</label><input type="date" id="gD" value="${ed?ed.measured_on:today()}"/></div>
+    <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
+      ${ed?`<button class="bDel" data-a="delGrowth" data-id="${ed.id}">Sil</button>`:''}
+      <button class="bSave" data-a="saveGrowth">Kaydet</button></div>
+  </div>`;
+}
 
-  // ================= EVENTS =================
-  function wireTabEvents(){
-    document.getElementById('tabContent').onclick = async (ev)=>{
-      const b = ev.target.closest('[data-act]');
-      if(!b) return;
-      const act = b.dataset.act;
-
-      if(act==='prevDate' || act==='nextDate'){
-        const section = b.dataset.section;
-        const d = new Date(selectedDate[section]+'T00:00:00');
-        d.setDate(d.getDate() + (act==='nextDate'?1:-1));
-        selectedDate[section] = fmtDate(d);
-        render();
-      } else if(act==='today'){
-        selectedDate[b.dataset.section] = todayStr(); render();
-      } else if(act==='openFeed'){
-        openPanel = {section:'feed', type:b.dataset.type, editingId:null}; render();
-      } else if(act==='editFeed'){
-        const e = entries.find(x=>x.id===b.dataset.id);
-        openPanel = {section:'feed', type:e.type, editingId:e.id}; render();
-      } else if(act==='delFeed'){
-        await supabase.from('entries').delete().eq('id', b.dataset.id);
-        openPanel=null;
-      } else if(act==='saveFeed'){
-        const amt = parseFloat(el('amtInput').value);
-        const timeVal = el('timeInput').value;
-        if(!amt || amt<=0){ el('amtInput').style.outline='2px solid var(--danger)'; return; }
-        const iso = new Date(timeVal).toISOString();
-        if(openPanel.editingId){
-          await supabase.from('entries').update({ type:openPanel.type, amount:amt, time:iso }).eq('id', openPanel.editingId);
-        } else {
-          await supabase.from('entries').insert({ type:openPanel.type, amount:amt, time:iso });
-        }
-        selectedDate.feed = iso.slice(0,10);
-        openPanel = null;
-
-      } else if(act==='quickDiaper'){
-        await supabase.from('diapers').insert({ kind:b.dataset.kind, time:new Date().toISOString() });
-      } else if(act==='editDiaper'){
-        const d = diapers.find(x=>x.id===b.dataset.id);
-        openPanel = {section:'diaper', kind:d.kind, editingId:d.id}; render();
-      } else if(act==='delDiaper'){
-        await supabase.from('diapers').delete().eq('id', b.dataset.id);
-        openPanel=null;
-      } else if(act==='saveDiaper'){
-        const kind = el('kindInput').value;
-        const timeVal = el('timeInput').value;
-        const iso = new Date(timeVal).toISOString();
-        if(openPanel.editingId){
-          await supabase.from('diapers').update({ kind, time:iso }).eq('id', openPanel.editingId);
-        } else {
-          await supabase.from('diapers').insert({ kind, time: iso });
-        }
-        selectedDate.diaper = iso.slice(0,10);
-        openPanel = null;
-
-      } else if(act==='logCare'){
-        await supabase.from('care_logs').insert({ kind:b.dataset.kind, time:new Date().toISOString() });
-      } else if(act==='delCare'){
-        await supabase.from('care_logs').delete().eq('id', b.dataset.id);
-
-      } else if(act==='openGrowth'){
-        openPanel = {section:'growth', editingId:null}; render();
-      } else if(act==='editGrowth'){
-        openPanel = {section:'growth', editingId:b.dataset.id}; render();
-      } else if(act==='delGrowth'){
-        await supabase.from('growth').delete().eq('id', b.dataset.id);
-        openPanel=null;
-      } else if(act==='saveGrowth'){
-        const weight = el('weightInput').value ? parseFloat(el('weightInput').value) : null;
-        const height = el('heightInput').value ? parseFloat(el('heightInput').value) : null;
-        const date = el('dateInput').value;
-        if(!weight && !height){ return; }
-        if(openPanel.editingId){
-          await supabase.from('growth').update({ weight_kg:weight, height_cm:height, measured_on:date }).eq('id', openPanel.editingId);
-        } else {
-          await supabase.from('growth').insert({ weight_kg:weight, height_cm:height, measured_on:date });
-        }
-        openPanel = null;
-
-      } else if(act==='closePanel'){
-        openPanel = null;
-      }
-      render();
-    };
-  }
-
-  document.querySelectorAll('.tabbtn').forEach(b=>{
-    b.addEventListener('click', ()=>{ activeTab = b.dataset.tab; openPanel=null; render(); });
+/* ===== alerts ===== */
+function renderAlerts(){
+  const out=[];
+  const fh=parseFloat(settings.reminder_feed_hours||'2');
+  const lf=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time)).find(e=>e.type!=='pump');
+  if(lf&&hoursSince(lf.time)>=fh) out.push(`Son beslenmeden ${Math.floor(hoursSince(lf.time))} saatten fazla geçti`);
+  Object.entries(CARE).forEach(([k,m])=>{
+    if(!m.key) return;
+    const t=settings[m.key]; if(!t) return;
+    if(careToday(k).length) return;
+    const [h,mi]=t.split(':').map(Number);
+    const d=new Date(); d.setHours(h,mi,0,0);
+    if(Date.now()>d.getTime()) out.push(`${m.name} bugün henüz yapılmadı (${t})`);
   });
+  $('alerts').innerHTML = out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
+}
 
-  document.getElementById('exportBtn').addEventListener('click', ()=>{
-    const backup = { exported_at: new Date().toISOString(), entries, diapers, careLogs, growth };
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `bebek-takip-yedek-${todayStr()}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
-  });
+/* ===== render ===== */
+function render(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  renderAlerts();
+  $('content').innerHTML = tab==='feed'?viewFeed():tab==='diaper'?viewDiaper():tab==='care'?viewCare():viewGrowth();
+}
 
-  if(window.Notification && Notification.permission==='default'){
-    // ask politely the first time the app is used, after login
+/* ===== events ===== */
+$('content').addEventListener('change', async ev=>{
+  const t=ev.target.closest('[data-a="setTime"]');
+  if(!t) return;
+  await supabase.from('settings').upsert({key:t.dataset.key, value:t.value},{onConflict:'key'});
+});
+$('content').addEventListener('click', async ev=>{
+  const b=ev.target.closest('[data-a]');
+  if(!b) return;
+  const a=b.dataset.a;
+  if(a==='setTime') return;
+
+  if(a==='prev'||a==='next'){
+    const s=b.dataset.s, d=new Date(dsel[s]+'T00:00:00');
+    d.setDate(d.getDate()+(a==='next'?1:-1)); dsel[s]=fmtDate(d);
+  }
+  else if(a==='today'){ dsel[b.dataset.s]=today(); }
+
+  else if(a==='newFeed'){ panel={s:'feed',t:b.dataset.t,id:null}; }
+  else if(a==='pickFeedType'){ panel={...panel,t:b.dataset.t}; }
+  else if(a==='editFeed'){ const e=entries.find(x=>x.id===b.dataset.id); panel={s:'feed',t:e.type,id:e.id}; }
+  else if(a==='delFeed'){ await supabase.from('entries').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='saveFeed'){
+    const amt=parseFloat($('fAmt').value), tv=$('fTime').value;
+    if(!amt||amt<=0){ $('fAmt').style.borderColor='var(--danger)'; return; }
+    const iso=new Date(tv).toISOString();
+    const type = panel.t;
+    if(panel.id) await supabase.from('entries').update({type,amount:amt,time:iso}).eq('id',panel.id);
+    else await supabase.from('entries').insert({type,amount:amt,time:iso});
+    dsel.feed=localDay(iso); panel=null;
   }
 
-  // ================= SUPABASE WIRING =================
-  let supabase;
-  function showLogin(){ el('loginScreen').style.display='block'; el('appScreen').style.display='none'; el('tabbar').style.display='none'; }
-  function showApp(){ el('loginScreen').style.display='none'; el('appScreen').style.display='block'; el('tabbar').style.display='flex'; }
-
-  async function refetchAll(){
-    const [e1,e2,e3,e4,e5] = await Promise.all([
-      supabase.from('entries').select('*').order('time',{ascending:false}),
-      supabase.from('diapers').select('*').order('time',{ascending:false}),
-      supabase.from('care_logs').select('*').order('time',{ascending:false}),
-      supabase.from('growth').select('*').order('measured_on',{ascending:false}),
-      supabase.from('settings').select('*'),
-    ]);
-    if(!e1.error) entries = e1.data.map(x=>({...x, amount:Number(x.amount)}));
-    if(!e2.error) diapers = e2.data;
-    if(!e3.error) careLogs = e3.data;
-    if(!e4.error) growth = e4.data;
-    if(!e5.error){ settings = {}; e5.data.forEach(r=> settings[r.key]=r.value); }
-    render();
+  else if(a==='quickDiaper'){ await supabase.from('diapers').insert({kind:b.dataset.k,time:new Date().toISOString()}); dsel.diaper=today(); }
+  else if(a==='editDiaper'){ const d=diapers.find(x=>x.id===b.dataset.id); panel={s:'diaper',k:d.kind,id:d.id}; }
+  else if(a==='pickDiaperKind'){ panel={...panel,k:b.dataset.k}; }
+  else if(a==='delDiaper'){ await supabase.from('diapers').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='saveDiaper'){
+    const iso=new Date($('dTime').value).toISOString();
+    await supabase.from('diapers').update({kind:panel.k,time:iso}).eq('id',panel.id);
+    dsel.diaper=localDay(iso); panel=null;
   }
 
-  async function startApp(){
-    refetchAll().then(()=>{
-      el('connBadge').classList.remove('offline');
-      el('connText').textContent = 'Bağlı';
-      el('loadingNote').textContent = 'Beslenme, bez, bakım ve büyüme takibi';
-      if(window.Notification && Notification.permission==='default'){
-        Notification.requestPermission();
-      }
-      setupPushNotifications();
-    });
-    ['entries','diapers','care_logs','growth','settings'].forEach(table=>{
-      supabase.channel(table+'-changes').on('postgres_changes', {event:'*',schema:'public',table}, refetchAll).subscribe();
-    });
-    setInterval(render, 30000);
+  else if(a==='logCare'){ await supabase.from('care_logs').insert({kind:b.dataset.k,time:new Date().toISOString()}); }
+  else if(a==='undoCare'||a==='delCare'){ await supabase.from('care_logs').delete().eq('id',b.dataset.id); }
+
+  else if(a==='newGrowth'){ panel={s:'growth',id:null,birth:!growth.some(g=>g.is_birth)}; }
+  else if(a==='editGrowth'){ panel={s:'growth',id:b.dataset.id}; }
+  else if(a==='toggleBirth'){
+    if(panel.id){ const g=growth.find(x=>x.id===panel.id); g.is_birth=!g.is_birth; }
+    else panel={...panel,birth:!panel.birth};
+  }
+  else if(a==='delGrowth'){ await supabase.from('growth').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='saveGrowth'){
+    const w=$('gW').value?parseFloat($('gW').value):null;
+    const h=$('gH').value?parseFloat($('gH').value):null;
+    const d=$('gD').value;
+    if(w===null&&h===null){ $('gW').style.borderColor='var(--danger)'; return; }
+    const ed=panel.id?growth.find(g=>g.id===panel.id):null;
+    const isBirth = ed?ed.is_birth:!!panel.birth;
+    const row={weight_kg:w,height_cm:h,measured_on:d,is_birth:isBirth};
+    if(panel.id) await supabase.from('growth').update(row).eq('id',panel.id);
+    else await supabase.from('growth').insert(row);
+    panel=null;
   }
 
-  async function tryLogin(pin){
-    const { error } = await supabase.auth.signInWithPassword({ email: SHARED_LOGIN_EMAIL, password: pin });
-    if(error){ el('loginError').style.display='block'; return; }
-    el('loginError').style.display='none';
-    showApp(); startApp();
-  }
+  else if(a==='close'){ panel=null; }
+  render();
+});
 
-  if(isConfigured){
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
-    supabase.auth.getSession().then(({data})=>{
-      if(data.session){ showApp(); startApp(); } else { showLogin(); }
-    });
-    el('loginBtn').addEventListener('click', ()=> tryLogin(el('pinInput').value));
-    el('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') el('loginBtn').click(); });
-  } else {
-    showApp();
-  }
+document.querySelectorAll('.tab').forEach(b=>
+  b.addEventListener('click',()=>{ tab=b.dataset.tab; panel=null; render(); }));
+
+$('exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,settings},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=`bebek-takip-yedek-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* ===== push ===== */
+function b64ToU8(s){
+  const p='='.repeat((4-s.length%4)%4), b=(s+p).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(b), out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+  return out;
+}
+async function setupPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
+  try{
+    const reg=await navigator.serviceWorker.register('sw.js');
+    if(Notification.permission==='default') await Notification.requestPermission();
+    if(Notification.permission!=='granted') return;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(VAPID_PUBLIC_KEY)});
+    const j=sub.toJSON();
+    await supabase.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'});
+  }catch(e){ console.error('push',e); }
+}
+
+/* ===== data ===== */
+async function refetch(){
+  const [a,b,c,d,e]=await Promise.all([
+    supabase.from('entries').select('*').order('time',{ascending:false}),
+    supabase.from('diapers').select('*').order('time',{ascending:false}),
+    supabase.from('care_logs').select('*').order('time',{ascending:false}),
+    supabase.from('growth').select('*').order('measured_on',{ascending:false}),
+    supabase.from('settings').select('*'),
+  ]);
+  if(!a.error) entries=a.data.map(x=>({...x,amount:Number(x.amount)}));
+  if(!b.error) diapers=b.data;
+  if(!c.error) careLogs=c.data;
+  if(!d.error) growth=d.data.map(x=>({...x,weight_kg:x.weight_kg!=null?Number(x.weight_kg):null,height_cm:x.height_cm!=null?Number(x.height_cm):null}));
+  if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); }
+  render();
+}
+function showLogin(){ $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
+function showApp(){ $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
+
+async function start(){
+  await refetch();
+  $('conn').classList.remove('off');
+  $('hdrSub').textContent='Beslenme · bez · bakım · büyüme';
+  setupPush();
+  ['entries','diapers','care_logs','growth','settings'].forEach(t=>
+    supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
+  setInterval(render,30000);
+}
+
+supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+supabase.auth.getSession().then(({data})=>{ if(data.session){ showApp(); start(); } else showLogin(); });
+$('loginBtn').addEventListener('click',async()=>{
+  const {error}=await supabase.auth.signInWithPassword({email:LOGIN_EMAIL,password:$('pinInput').value});
+  if(error){ $('loginErr').textContent='Şifre yanlış, tekrar deneyin.'; return; }
+  $('loginErr').textContent=''; showApp(); start();
+});
+$('pinInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
 </script>
 </body>
 </html>
