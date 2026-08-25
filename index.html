@@ -235,6 +235,14 @@
     @page{margin:14mm;}
   }
 
+  .netbar{border-radius:10px;padding:9px 12px;font-size:12px;margin-bottom:9px;}
+  .netbar.off{background:var(--alertBg);color:var(--alertTx);border-left:2px solid var(--alert);}
+  .netbar.sync{background:var(--surface-2);color:var(--muted);}
+  .whoTag{display:inline-block;background:var(--surface-2);color:var(--muted);border-radius:5px;
+    padding:1px 6px;font-size:9.5px;margin-left:6px;font-family:'Inter',sans-serif;vertical-align:middle;}
+  .pendTag{display:inline-block;color:var(--alert);font-size:10px;margin-left:5px;vertical-align:middle;}
+  #whoBtn{font-family:'Fraunces',serif;font-weight:600;font-size:12px;}
+
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
     border-top:1px solid var(--line);display:flex;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
     max-width:460px;margin:0 auto;}
@@ -271,10 +279,12 @@
     <div class="hdrR">
       <button class="ghost" id="themeBtn" title="Tema">☾</button>
       <button class="ghost" id="setBtn" title="Ayarlar">⚙</button>
+      <button class="ghost" id="whoBtn" title="Bu cihaz kimin?"></button>
       <button class="ghost" id="exportBtn" title="Yedek indir">↓</button>
-      <div class="conn off" id="conn"></div>
+      <div class="conn off" id="conn" title=""></div>
     </div>
   </div>
+  <div id="netbar"></div>
   <div id="alerts"></div>
   <div id="settingsSlot"></div>
   <div id="content"></div>
@@ -504,6 +514,105 @@ function openReport(){
   window.print();
 }
 
+/* ================= ÇEVRİMDIŞI KATMANI ================= */
+const LS_CACHE='bt_cache_v1', LS_QUEUE='bt_queue_v1', LS_WHO='bt_who_v1';
+let online = navigator.onLine;
+let queue = [];
+let flushing = false;
+
+function lsGet(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+/* --- kim kaydetti --- */
+const WHO={ anne:{name:'Anne',short:'A'}, baba:{name:'Baba',short:'B'} };
+function whoAmI(){ return lsGet(LS_WHO,null); }
+function setWhoAmI(v){ lsSet(LS_WHO,v); }
+
+/* --- kuyruk --- */
+function loadQueue(){ queue=lsGet(LS_QUEUE,[]); }
+function saveQueue(){ lsSet(LS_QUEUE,queue); }
+function enqueue(op){ queue.push({...op, qid:'q'+Date.now()+Math.random().toString(36).slice(2,6)}); saveQueue(); }
+
+/* Tüm yazma işlemleri buradan geçer: çevrimiçiyse doğrudan, değilse kuyruğa. */
+async function mutate(op){
+  // op: {table, action:'insert'|'update'|'delete'|'upsert', row, id, match, onConflict}
+  applyLocally(op);
+  if(online){
+    const ok=await sendOp(op);
+    if(ok){ await refetch(); return; }
+  }
+  enqueue(op);
+  render();
+}
+async function sendOp(op){
+  try{
+    const t=supabase.from(op.table);
+    let res;
+    if(op.action==='insert') res=await t.insert(op.row);
+    else if(op.action==='update') res=await t.update(op.row).eq('id',op.id);
+    else if(op.action==='delete'){
+      res = op.match ? await t.delete().match(op.match) : await t.delete().eq('id',op.id);
+    }
+    else if(op.action==='upsert') res=await t.upsert(op.row,{onConflict:op.onConflict});
+    if(res && res.error) throw res.error;
+    return true;
+  }catch(e){ return false; }
+}
+async function flushQueue(){
+  if(flushing||!online||!queue.length) return;
+  flushing=true;
+  const pending=[...queue];
+  for(const op of pending){
+    const ok=await sendOp(op);
+    if(ok) queue=queue.filter(q=>q.qid!==op.qid);
+    else break;               // sıradaki denemeye bırak
+  }
+  saveQueue(); flushing=false;
+  await refetch();
+}
+
+/* Çevrimdışıyken ekranın hemen güncellenmesi için yerel uygulama */
+function applyLocally(op){
+  const store={entries,diapers,care_logs:careLogs,growth,vaccines,settings:null}[op.table];
+  if(op.table==='settings'){
+    if(op.row) settings[op.row.key]=op.row.value;
+    return;
+  }
+  if(!store) return;
+  if(op.action==='insert'){
+    store.unshift({id:'tmp'+Date.now()+Math.random().toString(36).slice(2,5), ...op.row, _pending:true});
+  } else if(op.action==='update'){
+    const i=store.findIndex(x=>x.id===op.id);
+    if(i>=0) store[i]={...store[i],...op.row,_pending:true};
+  } else if(op.action==='delete'){
+    if(op.match){
+      for(let i=store.length-1;i>=0;i--){
+        if(Object.entries(op.match).every(([k,v])=>store[i][k]===v)) store.splice(i,1);
+      }
+    } else {
+      const i=store.findIndex(x=>x.id===op.id);
+      if(i>=0) store.splice(i,1);
+    }
+  } else if(op.action==='upsert'){
+    const i=store.findIndex(x=>op.onConflict&&op.onConflict.split(',').every(k=>x[k.trim()]===op.row[k.trim()]));
+    if(i>=0) store[i]={...store[i],...op.row,_pending:true};
+    else store.unshift({id:'tmp'+Date.now(), ...op.row, _pending:true});
+  }
+}
+
+function cacheSnapshot(){
+  lsSet(LS_CACHE,{entries,diapers,careLogs,growth,vaccines,settings,at:Date.now()});
+}
+function loadSnapshot(){
+  const c=lsGet(LS_CACHE,null);
+  if(!c) return false;
+  entries=c.entries||[]; diapers=c.diapers||[]; careLogs=c.careLogs||[];
+  growth=c.growth||[]; vaccines=c.vaccines||[]; settings=c.settings||{};
+  return true;
+}
+window.addEventListener('online', ()=>{ online=true; render(); flushQueue(); });
+window.addEventListener('offline', ()=>{ online=false; render(); });
+
 function viewSettings(){
   if(!showSettings) return '';
   const th=document.documentElement.getAttribute('data-theme');
@@ -511,6 +620,10 @@ function viewSettings(){
   const ph=parseFloat(settings.reminder_pump_hours||'3');
   return `<div class="panel">
     <div class="panelTitle">Ayarlar</div>
+    <div class="setGroup"><div class="setLabel">Bu cihazı kim kullanıyor?</div><div class="chips">
+      ${Object.entries(WHO).map(([k,v])=>`<div class="chip ${whoAmI()===k?'on':''}" data-a="setWho" data-v="${k}">${v.name}</div>`).join('')}
+      ${whoAmI()?`<div class="chip" data-a="setWho" data-v="">temizle</div>`:''}</div>
+      <div class="setHint">Sadece bu telefonda saklanır. Yeni kayıtlarınız bu isimle etiketlenir.</div></div>
     <div class="setGroup"><div class="setLabel">Görünüm</div><div class="chips">
       <div class="chip ${th==='dark'?'on':''}" data-a="theme" data-v="dark">☾ Koyu</div>
       <div class="chip ${th==='light'?'on':''}" data-a="theme" data-v="light">☀ Açık</div></div></div>
@@ -663,7 +776,7 @@ function viewFeed(){
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(e=>{
       const m=FEED[e.type];
       return `<div class="item"><div class="bar" style="background:${m.color}"></div>
-        <div class="itemMid"><div class="itemName">${m.name}${e.side?`<span class="sideTag">${SIDE[e.side].name}</span>`:''}</div><div class="itemMeta">${hhmm(e.time)} · ${ago(e.time)}</div></div>
+        <div class="itemMid"><div class="itemName">${m.name}${e.side?`<span class="sideTag">${SIDE[e.side].name}</span>`:''}${byTag(e)}</div><div class="itemMeta">${hhmm(e.time)} · ${ago(e.time)}</div></div>
         <div class="itemVal">${e.amount}<span class="statUnit">cc</span></div>
         <div class="itemBtns"><button data-a="editFeed" data-id="${e.id}">✎</button><button data-a="delFeed" data-id="${e.id}">✕</button></div></div>`;
     }).join(''):`<div class="blank">Bu gün için kayıt yok.</div>`}`;
@@ -706,7 +819,7 @@ function viewDiaper(){
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(d=>{
       const m=DIAPER[d.kind];
       return `<div class="item"><div class="bar" style="background:${m.color}"></div>
-        <div class="itemMid"><div class="itemName">${m.name}</div><div class="itemMeta">${hhmm(d.time)} · ${ago(d.time)}</div></div>
+        <div class="itemMid"><div class="itemName">${m.name}${byTag(d)}</div><div class="itemMeta">${hhmm(d.time)} · ${ago(d.time)}</div></div>
         <div class="itemBtns"><button data-a="editDiaper" data-id="${d.id}">✎</button><button data-a="delDiaper" data-id="${d.id}">✕</button></div></div>`;
     }).join(''):`<div class="blank">Bu gün için kayıt yok.<br>Yukarıdan tek dokunuşla ekleyin.</div>`}`;
 }
@@ -794,7 +907,7 @@ function viewCare(){
   const log=careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
   return rows+(log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
     `<div class="item"><div class="bar" style="background:var(--care)"></div>
-      <div class="itemMid"><div class="itemName">${CARE[c.kind].name}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
+      <div class="itemMid"><div class="itemName">${CARE[c.kind].name}${byTag(c)}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
       <div class="itemBtns"><button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
     :`<div class="blank">Bugün için bakım kaydı yok.</div>`);
 }
@@ -880,6 +993,25 @@ function renderAlerts(){
   $('alerts').innerHTML=out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
 }
 
+function byTag(r){
+  const w=r.recorded_by;
+  const pend=r._pending?'<span class="pendTag" title="gönderilmeyi bekliyor">↻</span>':'';
+  return (w&&WHO[w]?`<span class="whoTag">${WHO[w].name}</span>`:'')+pend;
+}
+function renderNet(){
+  const c=$('conn');
+  c.classList.toggle('off',!online);
+  c.title = online?'Bağlı':'Çevrimdışı';
+  const n=queue.length;
+  $('netbar').innerHTML = (!online||n)
+    ? `<div class="netbar ${online?'sync':'off'}">${online
+        ? `↻ ${n} kayıt gönderiliyor…`
+        : `⚡ Çevrimdışı — kayıtlar telefonda tutuluyor${n?` (${n} bekliyor)`:''}`}</div>`
+    : '';
+  const w=whoAmI();
+  $('whoBtn').textContent = w?WHO[w].short:'?';
+  $('whoBtn').style.color = w?'var(--milk)':'var(--muted)';
+}
 function renderHeader(){
   const birth=growth.find(x=>x.is_birth);
   const age=birth?babyAge(birth.measured_on):null;
@@ -888,7 +1020,7 @@ function renderHeader(){
 }
 function render(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-  renderHeader(); renderAlerts();
+  renderHeader(); renderNet(); renderAlerts();
   $('settingsSlot').innerHTML=viewSettings();
   $('content').innerHTML = tab==='feed'?viewFeed():tab==='diaper'?viewDiaper():tab==='care'?viewCare():tab==='growth'?viewGrowth():viewVaccine();
 }
@@ -897,7 +1029,7 @@ function render(){
 document.addEventListener('change', async ev=>{
   const t=ev.target.closest('[data-a="setTime"]');
   if(!t) return;
-  await supabase.from('settings').upsert({key:t.dataset.key,value:t.value},{onConflict:'key'});
+  await mutate({table:'settings',action:'upsert',row:{key:t.dataset.key,value:t.value},onConflict:'key'});
 });
 document.addEventListener('click', async ev=>{
   const b=ev.target.closest('[data-a]');
@@ -907,7 +1039,7 @@ document.addEventListener('click', async ev=>{
 
   if(a==='theme'){ applyTheme(b.dataset.v); render(); return; }
   if(a==='setIv'){
-    await supabase.from('settings').upsert({key:b.dataset.key,value:b.dataset.v},{onConflict:'key'});
+    await mutate({table:'settings',action:'upsert',row:{key:b.dataset.key,value:b.dataset.v},onConflict:'key'});
     settings[b.dataset.key]=b.dataset.v; render(); return;
   }
   if(a==='closeSettings'){ showSettings=false; render(); return; }
@@ -920,35 +1052,35 @@ document.addEventListener('click', async ev=>{
   else if(a==='newFeed'){ panel={s:'feed',t:b.dataset.t,id:null}; }
   else if(a==='pickFeedType'){ panel={...panel,t:b.dataset.t}; }
   else if(a==='editFeed'){ const e=entries.find(x=>x.id===b.dataset.id); panel={s:'feed',t:e.type,id:e.id,side:e.side||null}; }
-  else if(a==='delFeed'){ await supabase.from('entries').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='delFeed'){ await mutate({table:'entries',action:'delete',id:b.dataset.id}); panel=null; }
   else if(a==='saveFeed'){
     const amt=parseFloat($('fAmt').value);
     if(!amt||amt<=0){ $('fAmt').style.borderColor='var(--danger)'; return; }
     const iso=combineDT(dsel.feed, $('fTime').value);
     const side = SIDE_TYPES.includes(panel.t) ? (panel.side!==undefined?panel.side:null) : null;
     const row={type:panel.t,amount:amt,time:iso,side:side||null};
-    if(panel.id) await supabase.from('entries').update(row).eq('id',panel.id);
-    else await supabase.from('entries').insert(row);
+    if(panel.id) await mutate({table:'entries',action:'update',id:panel.id,row});
+    else await mutate({table:'entries',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
   }
-  else if(a==='quickDiaper'){ await supabase.from('diapers').insert({kind:b.dataset.k,time:new Date().toISOString()}); dsel.diaper=today(); }
+  else if(a==='quickDiaper'){ await mutate({table:'diapers',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}}); dsel.diaper=today(); }
   else if(a==='editDiaper'){ const d=diapers.find(x=>x.id===b.dataset.id); panel={s:'diaper',k:d.kind,id:d.id}; }
   else if(a==='pickDiaperKind'){ panel={...panel,k:b.dataset.k}; }
-  else if(a==='delDiaper'){ await supabase.from('diapers').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='delDiaper'){ await mutate({table:'diapers',action:'delete',id:b.dataset.id}); panel=null; }
   else if(a==='saveDiaper'){
     const iso=combineDT(dsel.diaper, $('dTime').value);
-    await supabase.from('diapers').update({kind:panel.k,time:iso}).eq('id',panel.id);
+    await mutate({table:'diapers',action:'update',id:panel.id,row:{kind:panel.k,time:iso}});
     panel=null;
   }
-  else if(a==='logCare'){ await supabase.from('care_logs').insert({kind:b.dataset.k,time:new Date().toISOString()}); }
-  else if(a==='undoCare'||a==='delCare'){ await supabase.from('care_logs').delete().eq('id',b.dataset.id); }
+  else if(a==='logCare'){ await mutate({table:'care_logs',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}}); }
+  else if(a==='undoCare'||a==='delCare'){ await mutate({table:'care_logs',action:'delete',id:b.dataset.id}); }
   else if(a==='newGrowth'){ panel={s:'growth',id:null,birth:!growth.some(x=>x.is_birth)}; }
   else if(a==='editGrowth'){ panel={s:'growth',id:b.dataset.id}; }
   else if(a==='toggleBirth'){
     if(panel.id){ const x=growth.find(y=>y.id===panel.id); x.is_birth=!x.is_birth; }
     else panel={...panel,birth:!panel.birth};
   }
-  else if(a==='delGrowth'){ await supabase.from('growth').delete().eq('id',b.dataset.id); panel=null; }
+  else if(a==='delGrowth'){ await mutate({table:'growth',action:'delete',id:b.dataset.id}); panel=null; }
   else if(a==='saveGrowth'){
     const gv=$('gW').value?parseFloat($('gW').value):null;
     const h=$('gH').value?parseFloat($('gH').value):null;
@@ -956,19 +1088,20 @@ document.addEventListener('click', async ev=>{
     if(gv===null&&h===null){ $('gW').style.borderColor='var(--danger)'; return; }
     const ed=panel.id?growth.find(x=>x.id===panel.id):null;
     const row={weight_kg:gv!=null?gv/1000:null,height_cm:h,measured_on:d,is_birth:ed?ed.is_birth:!!panel.birth};
-    if(panel.id) await supabase.from('growth').update(row).eq('id',panel.id);
-    else await supabase.from('growth').insert(row);
+    if(panel.id) await mutate({table:'growth',action:'update',id:panel.id,row});
+    else await mutate({table:'growth',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
   }
+  else if(a==='setWho'){ setWhoAmI(b.dataset.v||null); }
   else if(a==='careCog'){ carePanel = carePanel===b.dataset.k?null:b.dataset.k; }
   else if(a==='setDose'){
     const k=b.dataset.k, key='care_'+k+'_perday';
-    await supabase.from('settings').upsert({key,value:b.dataset.v},{onConflict:'key'});
+    await mutate({table:'settings',action:'upsert',row:{key,value:b.dataset.v},onConflict:'key'});
     settings[key]=b.dataset.v;
   }
   else if(a==='setCareIv'){
     const k=b.dataset.k, key='care_'+k+'_interval';
-    await supabase.from('settings').upsert({key,value:b.dataset.v},{onConflict:'key'});
+    await mutate({table:'settings',action:'upsert',row:{key,value:b.dataset.v},onConflict:'key'});
     settings[key]=b.dataset.v;
   }
   else if(a==='rangePreset'){
@@ -978,11 +1111,11 @@ document.addEventListener('click', async ev=>{
   else if(a==='pickSide'){ panel={...panel, side:b.dataset.v||null}; }
   else if(a==='markVaccine'){ panel={s:'vaccine',code:b.dataset.code,dose:Number(b.dataset.dose),date:today()}; }
   else if(a==='saveVaccine'){
-    await supabase.from('vaccines').upsert({code:panel.code,dose:panel.dose,given_on:$('vDate').value},{onConflict:'code,dose'});
+    await mutate({table:'vaccines',action:'upsert',row:{code:panel.code,dose:panel.dose,given_on:$('vDate').value},onConflict:'code,dose'});
     panel=null;
   }
   else if(a==='undoVaccine'){
-    await supabase.from('vaccines').delete().eq('code',b.dataset.code).eq('dose',Number(b.dataset.dose));
+    await mutate({table:'vaccines',action:'delete',match:{code:b.dataset.code,dose:Number(b.dataset.dose)}});
   }
   else if(a==='close'){ panel=null; }
   else return;
@@ -994,6 +1127,7 @@ $('themeBtn').addEventListener('click',()=>{
   applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark'); render();
 });
 $('setBtn').addEventListener('click',()=>{ showSettings=!showSettings; render(); });
+$('whoBtn').addEventListener('click',()=>{ showSettings=true; render(); });
 $('exportBtn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({baby:BABY,exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,vaccines,settings},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
@@ -1023,6 +1157,8 @@ async function setupPush(){
 
 /* ---- data ---- */
 async function refetch(){
+  if(!online) { render(); return; }
+  try{
   const [a,b,c,d,e,v]=await Promise.all([
     supabase.from('entries').select('*').order('time',{ascending:false}),
     supabase.from('diapers').select('*').order('time',{ascending:false}),
@@ -1037,13 +1173,17 @@ async function refetch(){
   if(!d.error) growth=d.data.map(x=>({...x,weight_kg:x.weight_kg!=null?Number(x.weight_kg):null,height_cm:x.height_cm!=null?Number(x.height_cm):null}));
   if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); }
   if(!v.error) vaccines=v.data;
+  cacheSnapshot();
   render();
+  }catch(err){ online=false; render(); }
 }
 function showLogin(){ document.title='Bebek Takip'; $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
 function showApp(){ document.title=BABY+' · Bebek Takip'; $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
 async function start(){
+  loadQueue();
+  if(loadSnapshot()) render();           // önbellekten anında aç
   await refetch();
-  $('conn').classList.remove('off');
+  await flushQueue();
   setupPush();
   ['entries','diapers','care_logs','growth','settings','vaccines'].forEach(t=>
     supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
