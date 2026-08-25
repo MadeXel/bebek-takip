@@ -196,19 +196,44 @@
   .vbtn.on{border-color:var(--care);color:var(--care);}
   .vnote{font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:18px;padding:0 2px;}
 
-  .doseTag{display:inline-block;background:var(--alertBg);color:var(--milk);border-radius:5px;
-    padding:1px 6px;font-size:9.5px;margin-left:6px;font-family:'Inter',sans-serif;vertical-align:middle;}
-  .doseDot{width:8px;height:8px;border-radius:50%;background:var(--surface-2);
-    border:1px solid var(--line);display:inline-block;}
-  .doseDot.on{background:var(--care);border-color:var(--care);}
-  .doseDot.late{border-color:var(--alert);background:transparent;}
-  .doseTimes{font-size:10.5px;color:var(--muted);margin-left:6px;}
-  .careActs{display:flex;align-items:center;gap:10px;}
-  .careCfg{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;}
-  .careCfgBox{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);}
-  .doseTimeRow{display:flex;gap:6px;flex-wrap:wrap;}
-  .doseTime{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
-    border-radius:8px;padding:6px 8px;font-size:12px;font-family:'Inter',sans-serif;}
+  .careIc.due{box-shadow:0 0 0 2px var(--alert);}
+  .rx{display:inline-block;background:var(--alertBg);color:var(--alert);border-radius:5px;
+    padding:1px 6px;font-size:9.5px;font-family:'Inter',sans-serif;vertical-align:middle;margin-left:4px;}
+  .pips{display:flex;align-items:center;gap:5px;}
+  .pip{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line);}
+  .pip.on{background:var(--care);border-color:var(--care);}
+  .pipTxt{font-size:11px;color:var(--muted);margin-left:4px;}
+  .careCog{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;}
+  .careSet{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);}
+  .careSet .setLabel{margin-top:8px;}
+  .careSet .chips{margin-bottom:4px;}
+  .tin{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;}
+  .cbx{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text);
+    background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer;}
+  .cbx input{accent-color:var(--milk);}
+  .setHint{font-size:10.5px;color:var(--muted);line-height:1.5;margin-top:8px;}
+
+  /* ---------- print report ---------- */
+  .printArea{display:none;}
+  @media print{
+    body{background:#fff !important;color:#000 !important;}
+    .shell,.tabs,.loginWrap{display:none !important;}
+    .printArea{display:block !important;font-family:'Inter',sans-serif;color:#000;padding:0;}
+    .rhead{border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px;}
+    .rhead h1{font-family:'Fraunces',serif;font-size:19px;margin:0 0 4px;}
+    .rmeta{font-size:11px;color:#444;}
+    .rtot{margin-bottom:18px;}
+    .rtot h2{font-size:13px;margin:0 0 6px;font-family:'Fraunces',serif;}
+    .printArea table{width:100%;border-collapse:collapse;font-size:11px;}
+    .printArea th,.printArea td{text-align:left;padding:3px 6px;border-bottom:1px solid #ddd;}
+    .printArea th{background:#f0f0f0;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;}
+    .rday{margin-bottom:14px;page-break-inside:avoid;}
+    .rday h3{font-family:'Fraunces',serif;font-size:12.5px;margin:0 0 3px;}
+    .rsum{font-size:10.5px;color:#444;margin-bottom:5px;}
+    .rfoot{margin-top:18px;padding-top:6px;border-top:1px solid #ccc;font-size:9.5px;color:#666;}
+    @page{margin:14mm;}
+  }
 
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
     border-top:1px solid var(--line);display:flex;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
@@ -239,7 +264,7 @@
     <div class="hdrL">
       <div class="hdrMoon">🌙<span class="star">✦</span></div>
       <div>
-        <h1 class="hdrName" id="hdrName">&nbsp;</h1>
+        <h1 class="hdrName" id="hdrName"></h1>
         <div class="hdrSub" id="hdrSub">Bağlanılıyor…</div>
       </div>
     </div>
@@ -263,6 +288,8 @@
   <button class="tab" data-tab="vaccine"><span class="ti">💉</span>Aşı</button>
 </div>
 
+<div id="printArea" class="printArea"></div>
+
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -270,7 +297,7 @@ const SUPABASE_URL="https://mqsrnkzdfzstznfqflso.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
 const LOGIN_EMAIL="aile@bebektakip.app";
 const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
-let BABY="";  // giriş sonrası settings tablosundan yüklenir
+const BABY="Alp";
 
 /* ---- theme ---- */
 function applyTheme(t){
@@ -287,6 +314,7 @@ function applyTheme(t){
 function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function localDay(iso){ return fmtDate(new Date(iso)); }
 function today(){ return fmtDate(new Date()); }
+function addDays(ds,n){ const d=new Date(ds+'T00:00:00'); d.setDate(d.getDate()+n); return fmtDate(d); }
 function isToday(iso){ return localDay(iso)===today(); }
 function dayLabel(ds){
   const y=new Date(); y.setDate(y.getDate()-1);
@@ -349,35 +377,11 @@ function greeting(){
 const FEED={ milk:{name:'Anne Sütü',ic:'🤱',color:'var(--milk)'}, formula:{name:'Mama',ic:'🍼',color:'var(--formula)'}, pump:{name:'Sağma',ic:'🫙',color:'var(--pump)'} };
 const DIAPER={ pee:{name:'Çiş',ic:'💧',color:'var(--pee)'}, poop:{name:'Kaka',ic:'💩',color:'var(--poop)'}, both:{name:'İkisi de',ic:'🧷',color:'var(--poop)'} };
 const CARE={
-  vitamin_d:{name:'Vitamin D',ic:'☀️'},
-  eye_drops:{name:'Göz Damlası',ic:'👁️'},
-  nose_drops:{name:'Burun Damlası',ic:'💦'},
-  nose_cleaning:{name:'Burun Temizliği',ic:'🧼'},
+  vitamin_d:{name:'Vitamin D',ic:'☀️',key:'reminder_vitamin_d_time',daily:1},
+  eye_drops:{name:'Göz Damlası',ic:'👁️',key:'reminder_eye_drops_time',daily:1},
+  nose_drops:{name:'Burun Damlası',ic:'💦',key:'reminder_nose_drops_time',daily:1},
+  nose_cleaning:{name:'Burun Temizliği',ic:'🧼',key:null,daily:null},
 };
-function careKey(kind){ return 'care_'+kind+'_times'; }
-function careTimes(kind){
-  const raw=settings[careKey(kind)];
-  if(!raw) return [];
-  return raw.split(',').map(x=>x.trim()).filter(Boolean).sort();
-}
-function defaultTimes(n){
-  if(n<=0) return [];
-  if(n===1) return ['09:00'];
-  const start=8*60, step=(22*60-start)/(n-1);
-  return Array.from({length:n},(_,i)=>{
-    const t=Math.round(start+step*i);
-    return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
-  });
-}
-function minsNow(){ const d=new Date(); return d.getHours()*60+d.getMinutes(); }
-function toMins(hm){ const [h,m]=hm.split(':').map(Number); return h*60+m; }
-function overdueDose(kind){
-  const times=careTimes(kind);
-  if(!times.length) return -1;
-  const done=careToday(kind).length;
-  for(let i=done;i<times.length;i++){ if(minsNow()>toMins(times[i])) return i; }
-  return -1;
-}
 const INTERVALS=[1.5,2,2.5,3,3.5,4];
 const SIDE={ left:{name:'Sol',short:'sol'}, right:{name:'Sağ',short:'sağ'}, both:{name:'İkisi',short:'ikisi'} };
 const SIDE_TYPES=['milk','pump'];  // taraf sadece emzirme ve sağmada sorulur
@@ -404,8 +408,7 @@ const VACCINES=[
 const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
 let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],settings={};
-let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, careOpen=null, supabase;
-let report={from:'',to:''};
+let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, carePanel=null, supabase;
 
 /* ---- rhythm strip ---- */
 function rhythmStrip(dateStr, mode){
@@ -435,6 +438,72 @@ function dateBar(s){
 }
 
 /* ---- settings ---- */
+/* ---- PRINTABLE REPORT ---- */
+function daysBetween(a,b){
+  const out=[]; const d=new Date(a+'T00:00:00'), end=new Date(b+'T00:00:00');
+  while(d<=end){ out.push(fmtDate(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function buildReport(from,to,opts){
+  const days=daysBetween(from,to);
+  if(days.length===0||days.length>120) return '<p>Geçersiz tarih aralığı.</p>';
+  const bd=birthDate();
+  let totMilk=0,totFormula=0,totPump=0,totFeeds=0,totPee=0,totPoop=0;
+
+  const dayBlocks=days.map(ds=>{
+    const fe=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
+    const di=diapers.filter(d=>localDay(d.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
+    if(!fe.length&&!di.length) return '';
+    const milk=fe.filter(e=>e.type==='milk').reduce((s,e)=>s+e.amount,0);
+    const formula=fe.filter(e=>e.type==='formula').reduce((s,e)=>s+e.amount,0);
+    const pump=fe.filter(e=>e.type==='pump').reduce((s,e)=>s+e.amount,0);
+    const feeds=fe.filter(e=>e.type!=='pump').length;
+    const pee=di.filter(d=>d.kind!=='poop').length, poop=di.filter(d=>d.kind!=='pee').length;
+    totMilk+=milk; totFormula+=formula; totPump+=pump; totFeeds+=feeds; totPee+=pee; totPoop+=poop;
+
+    const rows=[];
+    if(opts.feed) fe.forEach(e=>rows.push({t:e.time,k:FEED[e.type].name+(e.side?' ('+SIDE[e.side].short+')':''),v:e.amount+' cc'}));
+    if(opts.diaper) di.forEach(d=>rows.push({t:d.time,k:DIAPER[d.kind].name,v:''}));
+    rows.sort((a,b)=>new Date(a.t)-new Date(b.t));
+
+    return `<div class="rday">
+      <h3>${new Date(ds+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'})}</h3>
+      <div class="rsum">${opts.feed?`${feeds} beslenme · anne sütü ${milk} cc · mama ${formula} cc · sağılan ${pump} cc`:''}${opts.feed&&opts.diaper?' &nbsp;|&nbsp; ':''}${opts.diaper?`çiş ${pee} · kaka ${poop}`:''}</div>
+      <table><thead><tr><th>Saat</th><th>Kayıt</th><th>Miktar</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td>${hhmm(r.t)}</td><td>${r.k}</td><td>${r.v}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }).filter(Boolean).join('');
+
+  const nd=days.length;
+  return `<div class="rhead">
+      <h1>${BABY} — Takip Raporu</h1>
+      <div class="rmeta">
+        ${new Date(from+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}
+        – ${new Date(to+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}
+        (${nd} gün)${bd?` · doğum ${new Date(bd+'T00:00:00').toLocaleDateString('tr-TR')}${babyAge(bd)?', '+babyAge(bd):''}`:''}
+      </div>
+    </div>
+    <div class="rtot"><h2>Dönem özeti</h2><table><tbody>
+      ${opts.feed?`<tr><td>Toplam beslenme</td><td>${totFeeds} kez</td><td>günlük ort. ${(totFeeds/nd).toFixed(1)}</td></tr>
+      <tr><td>Anne sütü</td><td>${totMilk} cc</td><td>günlük ort. ${Math.round(totMilk/nd)} cc</td></tr>
+      <tr><td>Mama</td><td>${totFormula} cc</td><td>günlük ort. ${Math.round(totFormula/nd)} cc</td></tr>
+      <tr><td>Toplam alım</td><td>${totMilk+totFormula} cc</td><td>günlük ort. ${Math.round((totMilk+totFormula)/nd)} cc</td></tr>
+      <tr><td>Sağılan süt</td><td>${totPump} cc</td><td>günlük ort. ${Math.round(totPump/nd)} cc</td></tr>`:''}
+      ${opts.diaper?`<tr><td>Çiş</td><td>${totPee}</td><td>günlük ort. ${(totPee/nd).toFixed(1)}</td></tr>
+      <tr><td>Kaka</td><td>${totPoop}</td><td>günlük ort. ${(totPoop/nd).toFixed(1)}</td></tr>`:''}
+    </tbody></table></div>
+    ${dayBlocks||'<p>Bu aralıkta kayıt bulunamadı.</p>'}
+    <div class="rfoot">Bebek Takip · ${new Date().toLocaleDateString('tr-TR')} tarihinde oluşturuldu</div>`;
+}
+function openReport(){
+  const from=$('rFrom').value, to=$('rTo').value;
+  if(!from||!to||from>to){ $('rFrom').style.borderColor='var(--danger)'; return; }
+  const opts={feed:$('rFeed').checked, diaper:$('rDiaper').checked};
+  if(!opts.feed&&!opts.diaper) return;
+  $('printArea').innerHTML=buildReport(from,to,opts);
+  window.print();
+}
+
 function viewSettings(){
   if(!showSettings) return '';
   const th=document.documentElement.getAttribute('data-theme');
@@ -449,84 +518,24 @@ function viewSettings(){
       ${INTERVALS.map(v=>`<div class="chip ${v===fh?'on':''}" data-a="setIv" data-key="reminder_feed_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
     <div class="setGroup"><div class="setLabel">Sağma hatırlatması — son sağmadan sonra</div><div class="chips">
       ${INTERVALS.map(v=>`<div class="chip ${v===ph?'on':''}" data-a="setIv" data-key="reminder_pump_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
-    <div class="setGroup"><div class="setLabel">Rapor / PDF çıktısı</div>
+    <div class="setGroup"><div class="setLabel">PDF raporu — beslenme ve bez kayıtları</div>
       <div class="row2">
-        <div class="fld"><label>Başlangıç</label><input type="date" value="${report.from||weekAgo()}" data-a="reportField" data-f="from"/></div>
-        <div class="fld"><label>Bitiş</label><input type="date" value="${report.to||today()}" data-a="reportField" data-f="to"/></div>
+        <div class="fld"><label>Başlangıç</label><input type="date" id="rFrom" value="${addDays(today(),-6)}"/></div>
+        <div class="fld"><label>Bitiş</label><input type="date" id="rTo" value="${today()}"/></div>
       </div>
-      <div class="chips">
-        <div class="chip" data-a="makeReport" data-kind="feed">🍼 Beslenme</div>
-        <div class="chip" data-a="makeReport" data-kind="diaper">💧 Bez</div>
-        <div class="chip" data-a="makeReport" data-kind="all">📄 İkisi birden</div>
+      <div class="chips" style="margin-bottom:9px;">
+        <label class="cbx"><input type="checkbox" id="rFeed" checked/> Beslenme</label>
+        <label class="cbx"><input type="checkbox" id="rDiaper" checked/> Bez</label>
       </div>
-      <div class="setLabel" style="margin-top:-4px;">Açılan sayfada “PDF olarak kaydet”e dokunun</div>
+      <div class="chips" style="margin-bottom:4px;">
+        <div class="chip" data-a="rangePreset" data-v="7">Son 7 gün</div>
+        <div class="chip" data-a="rangePreset" data-v="30">Son 30 gün</div>
+      </div>
+      <button class="bSave" style="width:100%;border:none;border-radius:11px;padding:12px;font-family:'Fraunces',serif;font-weight:600;font-size:13.5px;cursor:pointer;" data-a="makeReport">PDF olarak yazdır</button>
+      <div class="setHint">Açılan yazdırma penceresinde hedef olarak "PDF olarak kaydet"i seçin. iPhone'da: Paylaş → Yazdır → parmakla büyüt → Paylaş.</div>
     </div>
     <div class="pacts"><button class="bCancel" data-a="closeSettings">Kapat</button></div>
   </div>`;
-}
-function weekAgo(){ const d=new Date(); d.setDate(d.getDate()-6); return fmtDate(d); }
-function daysBetween(from,to){
-  const out=[], d=new Date(from+'T00:00:00'), end=new Date(to+'T00:00:00');
-  while(d<=end){ out.push(fmtDate(d)); d.setDate(d.getDate()+1); }
-  return out;
-}
-function buildReport(kind){
-  const from=report.from||weekAgo(), to=report.to||today();
-  if(new Date(from+'T00:00:00')>new Date(to+'T00:00:00')) return null;
-  const days=daysBetween(from,to);
-  if(!days.length||days.length>120) return null;
-  const showFeed=kind==='feed'||kind==='all', showDia=kind==='diaper'||kind==='all';
-  const title=(BABY?BABY+' · ':'')+'Takip Raporu';
-  const fmtL=d=>new Date(d+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-  let tMilk=0,tForm=0,tPump=0,tFeeds=0,tPee=0,tPoop=0;
-  const blocks=days.map(ds=>{
-    const fe=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
-    const di=diapers.filter(d=>localDay(d.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
-    const milk=fe.filter(e=>e.type==='milk').reduce((s,e)=>s+e.amount,0);
-    const form=fe.filter(e=>e.type==='formula').reduce((s,e)=>s+e.amount,0);
-    const pump=fe.filter(e=>e.type==='pump').reduce((s,e)=>s+e.amount,0);
-    const feeds=fe.filter(e=>e.type!=='pump').length;
-    const pee=di.filter(d=>d.kind!=='poop').length, poop=di.filter(d=>d.kind!=='pee').length;
-    tMilk+=milk;tForm+=form;tPump+=pump;tFeeds+=feeds;tPee+=pee;tPoop+=poop;
-    if((!showFeed||!fe.length)&&(!showDia||!di.length)) return '';
-    const sum=[];
-    if(showFeed) sum.push(`Anne sütü ${milk} cc`,`Mama ${form} cc`,`Sağma ${pump} cc`,`${feeds} beslenme`);
-    if(showDia) sum.push(`${pee} çiş`,`${poop} kaka`);
-    let t='';
-    if(showFeed&&fe.length) t+=`<table><thead><tr><th>Saat</th><th>Tür</th><th>Miktar</th><th>Taraf</th></tr></thead><tbody>`
-      +fe.map(e=>`<tr><td>${hhmm(e.time)}</td><td>${FEED[e.type].name}</td><td>${e.amount} cc</td><td>${e.side?SIDE[e.side].name:'–'}</td></tr>`).join('')+`</tbody></table>`;
-    if(showDia&&di.length) t+=`<table><thead><tr><th>Saat</th><th>Bez</th></tr></thead><tbody>`
-      +di.map(d=>`<tr><td>${hhmm(d.time)}</td><td>${DIAPER[d.kind].name}</td></tr>`).join('')+`</tbody></table>`;
-    return `<section><h3>${new Date(ds+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'})}</h3>
-      <p class="sum">${sum.join(' · ')}</p>${t}</section>`;
-  }).join('');
-  const nd=days.length, avg=[];
-  if(showFeed) avg.push(`<tr><td>Günlük ortalama anne sütü</td><td>${Math.round(tMilk/nd)} cc</td></tr>`,
-    `<tr><td>Günlük ortalama mama</td><td>${Math.round(tForm/nd)} cc</td></tr>`,
-    `<tr><td>Günlük ortalama toplam alım</td><td>${Math.round((tMilk+tForm)/nd)} cc</td></tr>`,
-    `<tr><td>Günlük ortalama sağma</td><td>${Math.round(tPump/nd)} cc</td></tr>`,
-    `<tr><td>Günlük ortalama beslenme sayısı</td><td>${(tFeeds/nd).toFixed(1)}</td></tr>`);
-  if(showDia) avg.push(`<tr><td>Günlük ortalama çiş</td><td>${(tPee/nd).toFixed(1)}</td></tr>`,
-    `<tr><td>Günlük ortalama kaka</td><td>${(tPoop/nd).toFixed(1)}</td></tr>`);
-  return `<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
-  <style>@page{margin:16mm;}*{box-sizing:border-box;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;margin:0;padding:22px;line-height:1.45;}
-  h1{font-size:20px;margin:0 0 3px;}.range{color:#666;font-size:13px;margin-bottom:18px;}
-  h2{font-size:14px;margin:22px 0 8px;border-bottom:1px solid #ddd;padding-bottom:5px;}
-  section{margin-bottom:16px;page-break-inside:avoid;}h3{font-size:13px;margin:0 0 3px;}
-  .sum{margin:0 0 7px;color:#555;font-size:11.5px;}
-  table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:7px;}
-  th{text-align:left;background:#f3f3f3;padding:4px 7px;font-weight:600;border-bottom:1px solid #ddd;}
-  td{padding:4px 7px;border-bottom:1px solid #eee;}
-  .totals td:first-child{color:#555;}.totals td:last-child{text-align:right;font-weight:600;}
-  footer{margin-top:24px;color:#888;font-size:10px;border-top:1px solid #ddd;padding-top:8px;}
-  .noprint{position:fixed;top:10px;right:10px;background:#1a1a1a;color:#fff;border:none;padding:11px 16px;border-radius:8px;font-size:14px;cursor:pointer;}
-  @media print{body{padding:0;}.noprint{display:none;}}</style></head><body>
-  <button class="noprint" onclick="window.print()">PDF olarak kaydet</button>
-  <h1>${title}</h1><div class="range">${fmtL(from)} – ${fmtL(to)} · ${nd} gün</div>
-  <h2>Özet</h2><table class="totals">${avg.join('')}</table>
-  <h2>Günlük kayıtlar</h2>${blocks||'<p style="color:#888;font-size:12px;">Bu aralıkta kayıt yok.</p>'}
-  <footer>Oluşturulma: ${new Date().toLocaleString('tr-TR')}</footer></body></html>`;
 }
 
 /* ---- FEED ---- */
@@ -714,59 +723,80 @@ function panelDiaper(){
 
 /* ---- CARE ---- */
 function careToday(k){ return careLogs.filter(c=>c.kind===k&&isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
+function carePerDay(k){ const v=parseInt(settings['care_'+k+'_perday']); return isNaN(v)?(CARE[k].daily||0):v; }
+function careInterval(k){ const v=parseFloat(settings['care_'+k+'_interval']); return isNaN(v)?8:v; }
+function careTime(k){ return settings['reminder_'+k+'_time']||'09:00'; }
+/* bir sonraki dozun zamanı gelmiş mi? */
+function careDue(k){
+  const target=carePerDay(k);
+  if(!target) return false;
+  const list=careToday(k);
+  if(list.length>=target) return false;
+  if(list.length===0){
+    const [h,mi]=careTime(k).split(':').map(Number);
+    const t=new Date(); t.setHours(h,mi,0,0);
+    return Date.now()>t.getTime();
+  }
+  return hoursSince(list[0].time) >= careInterval(k);
+}
+const DOSE_OPTS=[0,1,2,3,4,5,6];
+const IV_OPTS=[3,4,6,8,12];
+
 function viewCare(){
   const rows=Object.entries(CARE).map(([kind,m])=>{
     const list=careToday(kind), n=list.length;
-    const times=careTimes(kind), target=times.length;
-    const od=overdueDose(kind);
-    const done = target>0 ? n>=target : n>0;
+    const target=carePerDay(kind);
+    const done=target>0 && n>=target;
+    const due=careDue(kind);
+    const open=carePanel===kind;
+
     let meta;
     if(target>0){
-      if(n>=target) meta=`Bugün tamamlandı · ${n}/${target} doz`;
-      else if(od>=0) meta=`<span class="late">${od+1}. doz saati geçti (${times[od]})</span> · ${n}/${target}`;
-      else meta=`${n}/${target} doz · sırada ${times[n]}`;
+      if(done) meta=`Bugün tamamlandı · son ${hhmm(list[0].time)}`;
+      else if(n===0) meta = due?`<span class="late">İlk doz saati geçti</span>`:`Bugün ${target} doz planlandı`;
+      else meta = due?`<span class="late">Sıradaki doz zamanı geldi</span>`:`son ${hhmm(list[0].time)} · sonraki ${careInterval(kind)} sa sonra`;
     } else {
-      meta = n>0 ? `Bugün ${n} kez · son ${hhmm(list[0].time)}` : 'Bugün henüz yapılmadı';
+      meta = n>0?`Bugün ${n} kez · son ${hhmm(list[0].time)}`:'Hatırlatma kapalı';
     }
-    const open = careOpen===kind;
-    return `<div class="care">
-      <div class="careTop">
-        <div class="careL"><div class="careIc ${done?'done':''}">${m.ic}</div>
-          <div style="min-width:0;"><div class="careName">${m.name}${target>1?`<span class="doseTag">${target}x1</span>`:''}</div>
-          <div class="careMeta">${meta}</div></div></div>
-        <button class="careAdd ${done?'done':''}" data-a="logCare" data-k="${kind}">${done&&target>0?'✓ Tamam':'+ Kaydet'}</button></div>
+
+    const pips = target>0
+      ? `<div class="pips">${Array.from({length:target}).map((_,i)=>
+          `<span class="pip ${i<n?'on':''}"></span>`).join('')}
+         <span class="pipTxt">${n}/${target}</span></div>`
+      : `<div class="pips">${n?Array.from({length:Math.min(n,8)}).map(()=>`<span class="pip on"></span>`).join(''):''}
+         <span class="pipTxt">${n?n+' kez':'—'}</span></div>`;
+
+    return `<div class="care"><div class="careTop">
+      <div class="careL"><div class="careIc ${done?'done':''} ${due?'due':''}">${m.ic}</div>
+        <div style="min-width:0;"><div class="careName">${m.name}${target>1?` <span class="rx">${target}x1</span>`:''}</div>
+        <div class="careMeta">${meta}</div></div></div>
+      <button class="careAdd ${done?'done':''}" data-a="logCare" data-k="${kind}">${done?'✓ Tamam':'+ Doz'}</button></div>
       <div class="careBottom">
-        <div class="careDots">
-          ${target>0
-            ? times.map((t,i)=>`<span class="doseDot ${i<n?'on':(minsNow()>toMins(t)?'late':'')}"></span>`).join('')
-              +`<span class="doseTimes">${times.join(' · ')}</span>`
-            : (n?Array.from({length:Math.min(n,10)}).map(()=>`<span class="doseDot on"></span>`).join('')+(n>10?`<span class="doseTimes">+${n-10}</span>`:'')
-                :'<span class="doseTimes">planlanmadı</span>')}
-        </div>
-        <div class="careActs">
+        ${pips}
+        <div style="display:flex;gap:10px;align-items:center;">
           ${n?`<button class="careUndo" data-a="undoCare" data-id="${list[0].id}">geri al</button>`:''}
-          <button class="careCfg" data-a="careCfg" data-k="${kind}">${open?'✕':'⚙'}</button>
+          <button class="careCog" data-a="careCog" data-k="${kind}">${open?'▴':'⚙'}</button>
         </div>
       </div>
-      ${open?careConfig(kind,times):''}
+      ${open?`<div class="careSet">
+        <div class="setLabel">Günde kaç doz?</div>
+        <div class="chips">${DOSE_OPTS.map(v=>`<div class="chip ${v===target?'on':''}" data-a="setDose" data-k="${kind}" data-v="${v}">${v===0?'kapalı':v+'x1'}</div>`).join('')}</div>
+        ${target>0?`
+        <div class="setLabel">İlk doz saati</div>
+        <div class="chips"><input type="time" class="tin" value="${careTime(kind)}" data-a="setTime" data-key="reminder_${kind}_time"/></div>
+        ${target>1?`<div class="setLabel">Dozlar arası</div>
+        <div class="chips">${IV_OPTS.map(v=>`<div class="chip ${v===careInterval(kind)?'on':''}" data-a="setCareIv" data-k="${kind}" data-v="${v}">${v} saat</div>`).join('')}</div>`:''}
+        `:''}
+      </div>`:''}
     </div>`;
   }).join('');
+
   const log=careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
   return rows+(log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
     `<div class="item"><div class="bar" style="background:var(--care)"></div>
       <div class="itemMid"><div class="itemName">${CARE[c.kind].name}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
       <div class="itemBtns"><button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
     :`<div class="blank">Bugün için bakım kaydı yok.</div>`);
-}
-function careConfig(kind,times){
-  return `<div class="careCfgBox">
-    <div class="setLabel">Günde kaç doz?</div>
-    <div class="chips">${[0,1,2,3,4,5,6].map(n=>
-      `<div class="chip ${n===times.length?'on':''}" data-a="setDoseCount" data-k="${kind}" data-n="${n}">${n===0?'yok':n+'x1'}</div>`).join('')}</div>
-    ${times.length?`<div class="setLabel">Hatırlatma saatleri</div>
-      <div class="doseTimeRow">${times.map((t,i)=>
-        `<input type="time" class="doseTime" value="${t}" data-a="setDoseTime" data-k="${kind}" data-i="${i}"/>`).join('')}</div>`:''}
-  </div>`;
 }
 
 /* ---- GROWTH (grams) ---- */
@@ -841,11 +871,11 @@ function renderAlerts(){
   const lp=all.find(e=>e.type==='pump');
   if(lp&&hoursSince(lp.time)>=ph) out.push(`Sağma vakti — son sağmadan ${Math.floor(hoursSince(lp.time))} saatten fazla geçti`);
   Object.entries(CARE).forEach(([k,m])=>{
-    const od=overdueDose(k);
-    if(od<0) return;
-    const times=careTimes(k);
-    out.push(times.length>1 ? `${m.name} — ${od+1}. doz saati geçti (${times[od]})`
-                            : `${m.name} bugün henüz yapılmadı (${times[od]})`);
+    if(!m.key) return;
+    const t=settings[m.key]; if(!t||careToday(k).length) return;
+    const [h,mi]=t.split(':').map(Number);
+    const d=new Date(); d.setHours(h,mi,0,0);
+    if(Date.now()>d.getTime()) out.push(`${m.name} bugün henüz yapılmadı (${t})`);
   });
   $('alerts').innerHTML=out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
 }
@@ -853,8 +883,7 @@ function renderAlerts(){
 function renderHeader(){
   const birth=growth.find(x=>x.is_birth);
   const age=birth?babyAge(birth.measured_on):null;
-  $('hdrName').textContent=BABY||'Bebek Takip';
-  if(BABY) document.title=BABY+' · Bebek Takip';
+  $('hdrName').textContent=BABY;
   $('hdrSub').textContent = age ? `${age} · ${greeting()}` : greeting();
 }
 function render(){
@@ -866,17 +895,9 @@ function render(){
 
 /* ---- events ---- */
 document.addEventListener('change', async ev=>{
-  const t=ev.target.closest('[data-a="setDoseTime"]');
-  if(t){
-    const kind=t.dataset.k, i=Number(t.dataset.i);
-    const times=careTimes(kind).slice(); times[i]=t.value;
-    const val=times.sort().join(',');
-    settings[careKey(kind)]=val;
-    await supabase.from('settings').upsert({key:careKey(kind),value:val},{onConflict:'key'});
-    render(); return;
-  }
-  const r=ev.target.closest('[data-a="reportField"]');
-  if(r) report[r.dataset.f]=r.value;
+  const t=ev.target.closest('[data-a="setTime"]');
+  if(!t) return;
+  await supabase.from('settings').upsert({key:t.dataset.key,value:t.value},{onConflict:'key'});
 });
 document.addEventListener('click', async ev=>{
   const b=ev.target.closest('[data-a]');
@@ -890,13 +911,6 @@ document.addEventListener('click', async ev=>{
     settings[b.dataset.key]=b.dataset.v; render(); return;
   }
   if(a==='closeSettings'){ showSettings=false; render(); return; }
-  if(a==='makeReport'){
-    const html=buildReport(b.dataset.kind);
-    if(!html){ alert('Tarih aralığı geçersiz (başlangıç bitişten önce olmalı, en fazla 120 gün).'); return; }
-    const w=window.open('','_blank');
-    if(!w){ alert('Rapor penceresi açılamadı — tarayıcı engellemiş olabilir.'); return; }
-    w.document.write(html); w.document.close(); return;
-  }
 
   if(a==='prev'||a==='next'){
     const s=b.dataset.s,d=new Date(dsel[s]+'T00:00:00');
@@ -946,17 +960,21 @@ document.addEventListener('click', async ev=>{
     else await supabase.from('growth').insert(row);
     panel=null;
   }
-  else if(a==='careCfg'){ careOpen = careOpen===b.dataset.k?null:b.dataset.k; }
-  else if(a==='setDoseCount'){
-    const kind=b.dataset.k, n=Number(b.dataset.n), cur=careTimes(kind);
-    let times;
-    if(n===0) times=[];
-    else if(n<=cur.length) times=cur.slice(0,n);
-    else { times=cur.slice(); const d=defaultTimes(n); for(let i=cur.length;i<n;i++) times.push(d[i]); }
-    const val=times.sort().join(',');
-    settings[careKey(kind)]=val;
-    await supabase.from('settings').upsert({key:careKey(kind),value:val},{onConflict:'key'});
+  else if(a==='careCog'){ carePanel = carePanel===b.dataset.k?null:b.dataset.k; }
+  else if(a==='setDose'){
+    const k=b.dataset.k, key='care_'+k+'_perday';
+    await supabase.from('settings').upsert({key,value:b.dataset.v},{onConflict:'key'});
+    settings[key]=b.dataset.v;
   }
+  else if(a==='setCareIv'){
+    const k=b.dataset.k, key='care_'+k+'_interval';
+    await supabase.from('settings').upsert({key,value:b.dataset.v},{onConflict:'key'});
+    settings[key]=b.dataset.v;
+  }
+  else if(a==='rangePreset'){
+    $('rFrom').value=addDays(today(),-(Number(b.dataset.v)-1)); $('rTo').value=today(); return;
+  }
+  else if(a==='makeReport'){ openReport(); return; }
   else if(a==='pickSide'){ panel={...panel, side:b.dataset.v||null}; }
   else if(a==='markVaccine'){ panel={s:'vaccine',code:b.dataset.code,dose:Number(b.dataset.dose),date:today()}; }
   else if(a==='saveVaccine'){
@@ -979,7 +997,7 @@ $('setBtn').addEventListener('click',()=>{ showSettings=!showSettings; render();
 $('exportBtn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({baby:BABY,exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,vaccines,settings},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`bebek-takip-yedek-${today()}.json`;
+  a.href=url; a.download=`alp-takip-yedek-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 });
 
@@ -1017,12 +1035,12 @@ async function refetch(){
   if(!b.error) diapers=b.data;
   if(!c.error) careLogs=c.data;
   if(!d.error) growth=d.data.map(x=>({...x,weight_kg:x.weight_kg!=null?Number(x.weight_kg):null,height_cm:x.height_cm!=null?Number(x.height_cm):null}));
-  if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); BABY=settings.baby_name||''; }
+  if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); }
   if(!v.error) vaccines=v.data;
   render();
 }
-function showLogin(){ BABY=''; document.title='Bebek Takip'; $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
-function showApp(){ $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
+function showLogin(){ document.title='Bebek Takip'; $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
+function showApp(){ document.title=BABY+' · Bebek Takip'; $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
 async function start(){
   await refetch();
   $('conn').classList.remove('off');
