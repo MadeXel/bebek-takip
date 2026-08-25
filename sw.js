@@ -2,14 +2,14 @@ self.addEventListener('install', () => { self.skipWaiting(); });
 self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()); });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'Alp', body: 'Hatırlatma' };
+  let data = { title: 'Bebek Takip', body: 'Hatırlatma' };
   try { if (event.data) data = event.data.json(); } catch (e) {}
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Alp', {
+    self.registration.showNotification(data.title || 'Bebek Takip', {
       body: data.body || '',
       icon: 'icon-192.png',
       badge: 'icon-192.png',
-      tag: data.tag || 'alp-reminder',
+      tag: data.tag || 'bebek-takip-reminder',
       renotify: true,
     })
   );

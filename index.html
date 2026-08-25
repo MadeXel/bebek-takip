@@ -979,7 +979,7 @@ $('setBtn').addEventListener('click',()=>{ showSettings=!showSettings; render();
 $('exportBtn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify({baby:BABY,exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,vaccines,settings},null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`alp-takip-yedek-${today()}.json`;
+  a.href=url; a.download=`bebek-takip-yedek-${today()}.json`;
   document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 });
 
