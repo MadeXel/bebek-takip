@@ -106,7 +106,9 @@
     border-radius:11px;padding:11px 12px;font-size:15px;font-family:'Inter',sans-serif;}
   .fld input:focus,.fld select:focus{outline:none;border-color:var(--milk);}
   .row2{display:flex;gap:9px;}
-  .row2 .fld{flex:1;}
+  .row2 .fld{flex:1 1 0;min-width:0;}
+  .row2 .fld input{width:100%;min-width:0;}
+  input[type="time"],input[type="date"]{-webkit-appearance:none;appearance:none;text-align:left;}
   .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
   .chip{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);border-radius:20px;
     padding:7px 13px;font-size:12.5px;cursor:pointer;font-family:'Inter',sans-serif;}
@@ -263,6 +265,15 @@ function localInput(iso){
   const d=iso?new Date(iso):new Date();
   return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
 }
+/* time-only (HH:MM) — the date comes from the date bar above */
+function timeOnly(iso){
+  const d=iso?new Date(iso):new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function combineDT(dateStr,hm){
+  if(!hm) hm=timeOnly(null);
+  return new Date(dateStr+'T'+hm+':00').toISOString();
+}
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const $=id=>document.getElementById(id);
 
@@ -306,10 +317,12 @@ let entries=[],diapers=[],careLogs=[],growth=[],settings={};
 let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, supabase;
 
 /* ---- rhythm strip ---- */
-function rhythmStrip(dateStr){
+function rhythmStrip(dateStr, mode){
   const marks=[];
-  entries.filter(e=>localDay(e.time)===dateStr).forEach(e=>marks.push({t:e.time,c:FEED[e.type].color}));
-  diapers.filter(d=>localDay(d.time)===dateStr).forEach(d=>marks.push({t:d.time,c:DIAPER[d.kind].color}));
+  if(mode==='feed')
+    entries.filter(e=>localDay(e.time)===dateStr).forEach(e=>marks.push({t:e.time,c:FEED[e.type].color}));
+  else
+    diapers.filter(d=>localDay(d.time)===dateStr).forEach(d=>marks.push({t:d.time,c:DIAPER[d.kind].color}));
   const W=340,H=26;
   const pos=iso=>{const d=new Date(iso);return ((d.getHours()*60+d.getMinutes())/1440)*W;};
   const now=new Date();
@@ -358,7 +371,7 @@ function viewFeed(){
   const lastFeed=all.find(e=>e.type!=='pump'), lastPump=all.find(e=>e.type==='pump');
   return dateBar('feed')+`
     <div class="rhythm"><div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
-      <div class="rhythmCount">${day.filter(e=>e.type!=='pump').length} beslenme</div></div>${rhythmStrip(ds)}</div>
+      <div class="rhythmCount">${day.filter(e=>e.type!=='pump').length} beslenme</div></div>${rhythmStrip(ds,'feed')}</div>
     <div class="statSince">
       <div><div class="statLabel">Son beslenme</div><div class="statVal" style="font-size:17px;">${lastFeed?ago(lastFeed.time):'—'}</div></div>
       <div style="text-align:right;"><div class="statLabel">Son sağma</div><div class="statVal" style="font-size:17px;">${lastPump?ago(lastPump.time):'—'}</div></div>
@@ -386,7 +399,7 @@ function panelFeed(){
     <div class="chips">${Object.entries(FEED).map(([k,m])=>`<div class="chip ${k===type?'on':''}" data-a="pickFeedType" data-t="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
     <div class="row2">
       <div class="fld"><label>Miktar (cc)</label><input type="number" id="fAmt" inputmode="numeric" min="0" step="5" value="${ed?ed.amount:''}" placeholder="60"/></div>
-      <div class="fld"><label>Saat</label><input type="datetime-local" id="fTime" value="${localInput(ed?ed.time:null)}"/></div>
+      <div class="fld"><label>Saat</label><input type="time" id="fTime" value="${timeOnly(ed?ed.time:null)}"/></div>
     </div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
       ${ed?`<button class="bDel" data-a="delFeed" data-id="${ed.id}">Sil</button>`:''}
@@ -400,7 +413,7 @@ function viewDiaper(){
   const last=[...diapers].sort((a,b)=>new Date(b.time)-new Date(a.time))[0];
   return dateBar('diaper')+`
     <div class="rhythm"><div class="rhythmTop"><div class="rhythmLabel">Günün ritmi</div>
-      <div class="rhythmCount">${day.length} değişim</div></div>${rhythmStrip(ds)}</div>
+      <div class="rhythmCount">${day.length} değişim</div></div>${rhythmStrip(ds,'diaper')}</div>
     <div class="stats">
       <div class="stat"><div class="statLabel">Son değişim</div><div class="statVal" style="font-size:16px;">${last?ago(last.time):'—'}</div></div>
       <div class="stat"><div class="statLabel">Çiş</div><div class="statVal">${day.filter(d=>d.kind!=='poop').length}</div></div>
@@ -421,7 +434,7 @@ function panelDiaper(){
   if(!ed) return '';
   return `<div class="panel"><div class="panelTitle">Bez kaydı düzenle</div>
     <div class="chips">${Object.entries(DIAPER).map(([k,m])=>`<div class="chip ${k===panel.k?'on':''}" data-a="pickDiaperKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
-    <div class="fld"><label>Saat</label><input type="datetime-local" id="dTime" value="${localInput(ed.time)}"/></div>
+    <div class="fld"><label>Saat</label><input type="time" id="dTime" value="${timeOnly(ed.time)}"/></div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
       <button class="bDel" data-a="delDiaper" data-id="${ed.id}">Sil</button>
       <button class="bSave" data-a="saveDiaper">Kaydet</button></div></div>`;
@@ -584,21 +597,21 @@ document.addEventListener('click', async ev=>{
   else if(a==='editFeed'){ const e=entries.find(x=>x.id===b.dataset.id); panel={s:'feed',t:e.type,id:e.id}; }
   else if(a==='delFeed'){ await supabase.from('entries').delete().eq('id',b.dataset.id); panel=null; }
   else if(a==='saveFeed'){
-    const amt=parseFloat($('fAmt').value), tv=$('fTime').value;
+    const amt=parseFloat($('fAmt').value);
     if(!amt||amt<=0){ $('fAmt').style.borderColor='var(--danger)'; return; }
-    const iso=new Date(tv).toISOString();
+    const iso=combineDT(dsel.feed, $('fTime').value);
     if(panel.id) await supabase.from('entries').update({type:panel.t,amount:amt,time:iso}).eq('id',panel.id);
     else await supabase.from('entries').insert({type:panel.t,amount:amt,time:iso});
-    dsel.feed=localDay(iso); panel=null;
+    panel=null;
   }
   else if(a==='quickDiaper'){ await supabase.from('diapers').insert({kind:b.dataset.k,time:new Date().toISOString()}); dsel.diaper=today(); }
   else if(a==='editDiaper'){ const d=diapers.find(x=>x.id===b.dataset.id); panel={s:'diaper',k:d.kind,id:d.id}; }
   else if(a==='pickDiaperKind'){ panel={...panel,k:b.dataset.k}; }
   else if(a==='delDiaper'){ await supabase.from('diapers').delete().eq('id',b.dataset.id); panel=null; }
   else if(a==='saveDiaper'){
-    const iso=new Date($('dTime').value).toISOString();
+    const iso=combineDT(dsel.diaper, $('dTime').value);
     await supabase.from('diapers').update({kind:panel.k,time:iso}).eq('id',panel.id);
-    dsel.diaper=localDay(iso); panel=null;
+    panel=null;
   }
   else if(a==='logCare'){ await supabase.from('care_logs').insert({kind:b.dataset.k,time:new Date().toISOString()}); }
   else if(a==='undoCare'||a==='delCare'){ await supabase.from('care_logs').delete().eq('id',b.dataset.id); }
