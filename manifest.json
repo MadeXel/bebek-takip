@@ -1,7 +1,7 @@
 {
-  "name": "Alp · Bebek Takip",
-  "short_name": "Alp",
-  "description": "Alp'in beslenme, bez, bakım ve büyüme takibi",
+  "name": "Bebek Takip",
+  "short_name": "Bebek Takip",
+  "description": "Beslenme, bez, bakım ve büyüme takibi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -9,8 +9,23 @@
   "background_color": "#17141c",
   "theme_color": "#17141c",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
