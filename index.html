@@ -243,12 +243,24 @@
   .pendTag{display:inline-block;color:var(--alert);font-size:10px;margin-left:5px;vertical-align:middle;}
   #whoBtn{font-family:'Fraunces',serif;font-weight:600;font-size:12px;}
 
+  .fld textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:11px;padding:11px 12px;font-size:15px;font-family:'Inter',sans-serif;resize:vertical;line-height:1.5;}
+  .fld textarea:focus{outline:none;border-color:var(--milk);}
+  .note{background:var(--surface);border-radius:var(--r);padding:13px 14px;margin-bottom:9px;box-shadow:var(--shadow);}
+  .note.pin{border-left:2px solid var(--milk);}
+  .noteTop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;}
+  .noteMeta{font-size:10.5px;color:var(--muted);}
+  .pinIc{margin-right:4px;}
+  .noteBtns{display:flex;flex-shrink:0;}
+  .noteBtns button{background:none;border:none;color:var(--muted);font-size:13px;padding:3px 5px;cursor:pointer;}
+  .noteBody{font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
+
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
-    border-top:1px solid var(--line);display:flex;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);display:flex;padding:7px 4px calc(7px + env(safe-area-inset-bottom));
     max-width:460px;margin:0 auto;}
   .tab{flex:1;background:none;border:none;color:var(--muted);padding:7px 2px;display:flex;flex-direction:column;
-    align-items:center;gap:4px;cursor:pointer;font-size:10px;font-family:'Inter',sans-serif;font-weight:500;position:relative;}
-  .tab .ti{font-size:17px;opacity:.5;transition:opacity .15s;}
+    align-items:center;gap:3px;cursor:pointer;font-size:9px;font-family:'Inter',sans-serif;font-weight:500;position:relative;}
+  .tab{font-size:9px;} .tab .ti{font-size:16px;opacity:.5;transition:opacity .15s;}
   .tab.on{color:var(--text);}
   .tab.on .ti{opacity:1;}
   .tab.on::before{content:'';position:absolute;top:-1px;width:16px;height:2px;border-radius:2px;background:var(--milk);}
@@ -296,6 +308,7 @@
   <button class="tab" data-tab="care"><span class="ti">🧴</span>Bakım</button>
   <button class="tab" data-tab="growth"><span class="ti">📐</span>Büyüme</button>
   <button class="tab" data-tab="vaccine"><span class="ti">💉</span>Aşı</button>
+  <button class="tab" data-tab="note"><span class="ti">📝</span>Notlar</button>
 </div>
 
 <div id="printArea" class="printArea"></div>
@@ -417,7 +430,7 @@ const VACCINES=[
 ];
 const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
-let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],settings={};
+let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],notes=[],settings={};
 let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, carePanel=null, supabase;
 
 /* ---- rhythm strip ---- */
@@ -573,7 +586,7 @@ async function flushQueue(){
 
 /* Çevrimdışıyken ekranın hemen güncellenmesi için yerel uygulama */
 function applyLocally(op){
-  const store={entries,diapers,care_logs:careLogs,growth,vaccines,settings:null}[op.table];
+  const store={entries,diapers,care_logs:careLogs,growth,vaccines,notes,settings:null}[op.table];
   if(op.table==='settings'){
     if(op.row) settings[op.row.key]=op.row.value;
     return;
@@ -601,17 +614,111 @@ function applyLocally(op){
 }
 
 function cacheSnapshot(){
-  lsSet(LS_CACHE,{entries,diapers,careLogs,growth,vaccines,settings,at:Date.now()});
+  lsSet(LS_CACHE,{entries,diapers,careLogs,growth,vaccines,notes,settings,at:Date.now()});
 }
 function loadSnapshot(){
   const c=lsGet(LS_CACHE,null);
   if(!c) return false;
   entries=c.entries||[]; diapers=c.diapers||[]; careLogs=c.careLogs||[];
-  growth=c.growth||[]; vaccines=c.vaccines||[]; settings=c.settings||{};
+  growth=c.growth||[]; vaccines=c.vaccines||[]; notes=c.notes||[]; settings=c.settings||{};
   return true;
 }
 window.addEventListener('online', ()=>{ online=true; render(); flushQueue(); });
 window.addEventListener('offline', ()=>{ online=false; render(); });
+
+/* ---- YEDEKLEME / GERİ YÜKLEME ---- */
+const LS_LASTBK='bt_lastbackup_v1';
+function backupWarning(){
+  const t=lsGet(LS_LASTBK,null);
+  if(!t) return `<div class="alert" style="margin-bottom:9px;">Bu cihazdan hiç yedek indirmediniz.</div>`;
+  const days=Math.floor((Date.now()-t)/86400000);
+  if(days>=14) return `<div class="alert" style="margin-bottom:9px;">Son yedek ${days} gün önce alındı.</div>`;
+  return `<div class="setHint" style="margin:0 0 8px;">Son indirilen yedek: ${days===0?'bugün':days+' gün önce'}</div>`;
+}
+function doExport(){
+  const payload={baby:BABY,exported_at:new Date().toISOString(),version:9,
+    entries,diapers,careLogs,growth,vaccines,notes,settings};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=url; a.download=`alp-takip-yedek-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  lsSet(LS_LASTBK,Date.now());
+  render();
+}
+async function doRestore(file){
+  const msg=$('restoreMsg');
+  const setMsg=(t,cls)=>{ msg.textContent=t; msg.className='setHint'+(cls?' '+cls:''); };
+  try{
+    const data=JSON.parse(await file.text());
+    const MAP={entries:'entries',diapers:'diapers',careLogs:'care_logs',
+               growth:'growth',vaccines:'vaccines',notes:'notes'};
+    let added=0, skipped=0;
+    for(const [key,table] of Object.entries(MAP)){
+      const rows=data[key];
+      if(!Array.isArray(rows)) continue;
+      const existing=new Set(({entries,diapers,care_logs:careLogs,growth,vaccines,notes}[table]||[]).map(x=>x.id));
+      const missing=rows.filter(r=>r.id&&!existing.has(r.id)).map(r=>{ const {_pending,...rest}=r; return rest; });
+      if(!missing.length){ skipped+=rows.length; continue; }
+      for(let i=0;i<missing.length;i+=100){
+        const chunk=missing.slice(i,i+100);
+        const {error}=await supabase.from(table).upsert(chunk,{onConflict:'id'});
+        if(error) throw error;
+        added+=chunk.length;
+      }
+      skipped+=rows.length-missing.length;
+    }
+    if(Array.isArray(data.settings)){
+      await supabase.from('settings').upsert(data.settings,{onConflict:'key'});
+    } else if(data.settings&&typeof data.settings==='object'){
+      const rows=Object.entries(data.settings).map(([key,value])=>({key,value:String(value)}));
+      if(rows.length) await supabase.from('settings').upsert(rows,{onConflict:'key'});
+    }
+    await refetch();
+    setMsg(`Geri yükleme tamam: ${added} kayıt eklendi, ${skipped} kayıt zaten vardı.`);
+  }catch(err){
+    setMsg('Geri yükleme başarısız: '+(err.message||'dosya okunamadı'));
+    console.error(err);
+  }
+}
+
+function viewNotes(){
+  const sorted=[...notes].sort((a,b)=>{
+    if(a.pinned!==b.pinned) return a.pinned?-1:1;
+    return new Date(b.time)-new Date(a.time);
+  });
+  return `
+    <div class="acts" style="grid-template-columns:1fr;">
+      <button class="act" data-a="newNote"><span class="swatch" style="background:var(--formula)22;">📝</span>Not Ekle</button>
+    </div>
+    <div id="panelSlot">${panel&&panel.s==='note'?panelNote():''}</div>
+    ${sorted.length?sorted.map(n=>`
+      <div class="note ${n.pinned?'pin':''}">
+        <div class="noteTop">
+          <div class="noteMeta">${n.pinned?'<span class="pinIc">📌</span>':''}${new Date(n.time).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})} · ${hhmm(n.time)}${byTag(n)}</div>
+          <div class="noteBtns">
+            <button data-a="pinNote" data-id="${n.id}" title="sabitle">${n.pinned?'★':'☆'}</button>
+            <button data-a="editNote" data-id="${n.id}">✎</button>
+            <button data-a="delNote" data-id="${n.id}">✕</button>
+          </div>
+        </div>
+        <div class="noteBody">${esc(n.body).replace(/\n/g,'<br>')}</div>
+      </div>`).join('')
+      :`<div class="blank">Henüz not yok.<br>Doktor önerisi, gözlem, soru — aklınızda kalması gereken her şey.</div>`}`;
+}
+function panelNote(){
+  const ed=panel.id?notes.find(n=>n.id===panel.id):null;
+  return `<div class="panel">
+    <div class="panelTitle">${ed?'Notu düzenle':'Yeni not'}</div>
+    <div class="fld"><textarea id="nBody" rows="5" placeholder="Örn. Doktor: D vitamini 3 damla, 6. ayda kontrol...">${ed?esc(ed.body):''}</textarea></div>
+    <div class="row2">
+      <div class="fld"><label>Tarih</label><input type="date" id="nDate" value="${ed?localDay(ed.time):today()}"/></div>
+      <div class="fld"><label>Saat</label><input type="time" id="nTime" value="${timeOnly(ed?ed.time:null)}"/></div>
+    </div>
+    <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
+      ${ed?`<button class="bDel" data-a="delNote" data-id="${ed.id}">Sil</button>`:''}
+      <button class="bSave" data-a="saveNote">Kaydet</button></div>
+  </div>`;
+}
 
 function viewSettings(){
   if(!showSettings) return '';
@@ -631,6 +738,16 @@ function viewSettings(){
       ${INTERVALS.map(v=>`<div class="chip ${v===fh?'on':''}" data-a="setIv" data-key="reminder_feed_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
     <div class="setGroup"><div class="setLabel">Sağma hatırlatması — son sağmadan sonra</div><div class="chips">
       ${INTERVALS.map(v=>`<div class="chip ${v===ph?'on':''}" data-a="setIv" data-key="reminder_pump_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
+    <div class="setGroup"><div class="setLabel">Yedekleme</div>
+      ${backupWarning()}
+      <div class="chips" style="margin-bottom:8px;">
+        <div class="chip" data-a="doExport">↓ Yedek indir (JSON)</div>
+        <label class="cbx" style="cursor:pointer;">↑ Yedekten geri yükle
+          <input type="file" id="restoreFile" accept="application/json,.json" style="display:none;"/></label>
+      </div>
+      <div id="restoreMsg" class="setHint"></div>
+      <div class="setHint">Sunucuda her gece otomatik yedek alınıyor (son 30 gün saklanır). İndirdiğiniz JSON dosyası ise sunucudan bağımsız kopyanızdır — bunu bulut depolamanıza atmanızı öneririm.</div>
+    </div>
     <div class="setGroup"><div class="setLabel">PDF raporu — beslenme ve bez kayıtları</div>
       <div class="row2">
         <div class="fld"><label>Başlangıç</label><input type="date" id="rFrom" value="${addDays(today(),-6)}"/></div>
@@ -1022,7 +1139,7 @@ function render(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   renderHeader(); renderNet(); renderAlerts();
   $('settingsSlot').innerHTML=viewSettings();
-  $('content').innerHTML = tab==='feed'?viewFeed():tab==='diaper'?viewDiaper():tab==='care'?viewCare():tab==='growth'?viewGrowth():viewVaccine();
+  $('content').innerHTML = tab==='feed'?viewFeed():tab==='diaper'?viewDiaper():tab==='care'?viewCare():tab==='growth'?viewGrowth():tab==='vaccine'?viewVaccine():viewNotes();
 }
 
 /* ---- events ---- */
@@ -1092,6 +1209,22 @@ document.addEventListener('click', async ev=>{
     else await mutate({table:'growth',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
   }
+  else if(a==='doExport'){ doExport(); return; }
+  else if(a==='newNote'){ panel={s:'note',id:null}; }
+  else if(a==='editNote'){ panel={s:'note',id:b.dataset.id}; }
+  else if(a==='delNote'){ await mutate({table:'notes',action:'delete',id:b.dataset.id}); panel=null; }
+  else if(a==='pinNote'){
+    const n=notes.find(x=>x.id===b.dataset.id);
+    await mutate({table:'notes',action:'update',id:n.id,row:{pinned:!n.pinned}});
+  }
+  else if(a==='saveNote'){
+    const body=$('nBody').value.trim();
+    if(!body){ $('nBody').style.borderColor='var(--danger)'; return; }
+    const iso=combineDT($('nDate').value||today(), $('nTime').value);
+    if(panel.id) await mutate({table:'notes',action:'update',id:panel.id,row:{body,time:iso}});
+    else await mutate({table:'notes',action:'insert',row:{body,time:iso,recorded_by:whoAmI()}});
+    panel=null;
+  }
   else if(a==='setWho'){ setWhoAmI(b.dataset.v||null); }
   else if(a==='careCog'){ carePanel = carePanel===b.dataset.k?null:b.dataset.k; }
   else if(a==='setDose'){
@@ -1128,11 +1261,11 @@ $('themeBtn').addEventListener('click',()=>{
 });
 $('setBtn').addEventListener('click',()=>{ showSettings=!showSettings; render(); });
 $('whoBtn').addEventListener('click',()=>{ showSettings=true; render(); });
-$('exportBtn').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify({baby:BABY,exported_at:new Date().toISOString(),entries,diapers,careLogs,growth,vaccines,settings},null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob), a=document.createElement('a');
-  a.href=url; a.download=`alp-takip-yedek-${today()}.json`;
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+$('exportBtn').addEventListener('click',doExport);
+document.addEventListener('change',(ev)=>{
+  if(ev.target && ev.target.id==='restoreFile' && ev.target.files && ev.target.files[0]){
+    doRestore(ev.target.files[0]);
+  }
 });
 
 /* ---- push ---- */
@@ -1159,13 +1292,14 @@ async function setupPush(){
 async function refetch(){
   if(!online) { render(); return; }
   try{
-  const [a,b,c,d,e,v]=await Promise.all([
+  const [a,b,c,d,e,v,nt]=await Promise.all([
     supabase.from('entries').select('*').order('time',{ascending:false}),
     supabase.from('diapers').select('*').order('time',{ascending:false}),
     supabase.from('care_logs').select('*').order('time',{ascending:false}),
     supabase.from('growth').select('*').order('measured_on',{ascending:false}),
     supabase.from('settings').select('*'),
     supabase.from('vaccines').select('*'),
+    supabase.from('notes').select('*'),
   ]);
   if(!a.error) entries=a.data.map(x=>({...x,amount:Number(x.amount)}));
   if(!b.error) diapers=b.data;
@@ -1173,6 +1307,7 @@ async function refetch(){
   if(!d.error) growth=d.data.map(x=>({...x,weight_kg:x.weight_kg!=null?Number(x.weight_kg):null,height_cm:x.height_cm!=null?Number(x.height_cm):null}));
   if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); }
   if(!v.error) vaccines=v.data;
+  if(!nt.error) notes=nt.data;
   cacheSnapshot();
   render();
   }catch(err){ online=false; render(); }
@@ -1185,7 +1320,7 @@ async function start(){
   await refetch();
   await flushQueue();
   setupPush();
-  ['entries','diapers','care_logs','growth','settings','vaccines'].forEach(t=>
+  ['entries','diapers','care_logs','growth','settings','vaccines','notes'].forEach(t=>
     supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
   setInterval(render,30000);
 }
