@@ -256,6 +256,13 @@
   .noteBtns button{background:none;border:none;color:var(--muted);font-size:13px;padding:3px 5px;cursor:pointer;}
   .noteBody{font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
 
+  .ptr{position:fixed;top:0;left:0;right:0;height:0;overflow:hidden;z-index:50;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface);color:var(--muted);font-size:11.5px;
+    font-family:'Inter',sans-serif;transition:height .18s ease;
+    padding-top:env(safe-area-inset-top);}
+  .ptr.spin{color:var(--milk);}
+  body{overscroll-behavior-y:contain;}
   .linkBtn{background:none;border:none;color:var(--milk);font-size:12px;cursor:pointer;
     font-family:'Inter',sans-serif;padding:6px 10px;text-decoration:underline;}
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
@@ -282,6 +289,7 @@
   </div>
 </div>
 
+<div id="ptr" class="ptr"></div>
 <div class="shell" id="appScreen" style="display:none;">
   <div class="hdr">
     <div class="hdrL">
@@ -1407,15 +1415,68 @@ async function refetch(){
 }
 function showLogin(){ document.title='Bebek Takip'; $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
 function showApp(){ document.title=BABY+' · Bebek Takip'; $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
+let rtChannels=[];
+function subscribeRealtime(){
+  try{ rtChannels.forEach(ch=>supabase.removeChannel(ch)); }catch(e){}
+  rtChannels=['entries','diapers','care_logs','growth','settings','vaccines','notes'].map(t=>
+    supabase.channel(t+'-ch-'+Math.random().toString(36).slice(2,7))
+      .on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
+}
+
+/* Uygulamaya geri dönünce: iOS arka planda WebSocket'i kestiği için
+   aboneliği yeniden kur ve veriyi tazele. */
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && supabase && online){
+    subscribeRealtime();
+    refetch();
+  }
+});
+window.addEventListener('focus',()=>{ if(supabase && online) refetch(); });
+
+/* ---- aşağı çekip yenile ---- */
+function initPullToRefresh(){
+  const el=document.getElementById('ptr');
+  let active=false, startY=0, dist=0, busy=false;
+  const THRESHOLD=62;
+  document.addEventListener('touchstart',(e)=>{
+    if(busy || window.scrollY>3 || panel || isEditing()) { active=false; return; }
+    active=true; startY=e.touches[0].clientY; dist=0;
+  },{passive:true});
+  document.addEventListener('touchmove',(e)=>{
+    if(!active) return;
+    const d=e.touches[0].clientY-startY;
+    if(d<=0){ dist=0; el.style.height='0px'; return; }
+    dist=Math.min(d*0.55,95);
+    el.style.height=dist+'px';
+    el.textContent = dist>THRESHOLD ? 'Bırakın, yenilensin' : 'Yenilemek için çekin';
+  },{passive:true});
+  const finish=async()=>{
+    if(!active) return;
+    const go=dist>THRESHOLD;
+    active=false;
+    if(go){
+      busy=true;
+      el.classList.add('spin'); el.textContent='Yenileniyor…'; el.style.height='46px';
+      try{ if(online){ subscribeRealtime(); await refetch(); await flushQueue(); } }catch(e){}
+      setTimeout(()=>{ el.style.height='0px'; el.classList.remove('spin'); busy=false; },350);
+    } else {
+      el.style.height='0px';
+    }
+  };
+  document.addEventListener('touchend',finish,{passive:true});
+  document.addEventListener('touchcancel',()=>{ active=false; el.style.height='0px'; },{passive:true});
+}
+
 async function start(){
   loadQueue();
   if(loadSnapshot()) render();           // önbellekten anında aç
   await refetch();
   await flushQueue();
   setupPush();
-  ['entries','diapers','care_logs','growth','settings','vaccines','notes'].forEach(t=>
-    supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
+  initPullToRefresh();
+  subscribeRealtime();
   setInterval(renderBg,30000);
+  setInterval(()=>{ if(online && document.visibilityState==='visible') refetch(); }, 60000);
 }
 supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 supabase.auth.getSession().then(({data})=>{ if(data.session){ showApp(); start(); } else showLogin(); });
