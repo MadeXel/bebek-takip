@@ -432,7 +432,7 @@ const VACCINES=[
 const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
 let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],notes=[],settings={};
-let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, carePanel=null, supabase;
+let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, carePanel=null, noteView='active', supabase;
 
 /* ---- rhythm strip ---- */
 function rhythmStrip(dateStr, mode){
@@ -629,6 +629,7 @@ window.addEventListener('offline', ()=>{ online=false; render(); });
 
 /* ---- YEDEKLEME / GERİ YÜKLEME ---- */
 const LS_LASTBK='bt_lastbackup_v1';
+const LS_DRAFT='bt_notedraft_v1';
 function backupWarning(){
   const t=lsGet(LS_LASTBK,null);
   if(!t) return `<div class="alert" style="margin-bottom:9px;">Bu cihazdan hiç yedek indirmediniz.</div>`;
@@ -683,34 +684,44 @@ async function doRestore(file){
 }
 
 function viewNotes(){
-  const sorted=[...notes].sort((a,b)=>{
+  const showArch = noteView==='archive';
+  const pool=notes.filter(n=>!!n.archived===showArch);
+  const sorted=[...pool].sort((a,b)=>{
     if(a.pinned!==b.pinned) return a.pinned?-1:1;
     return new Date(b.time)-new Date(a.time);
   });
+  const archCount=notes.filter(n=>n.archived).length;
+  const actCount=notes.length-archCount;
   return `
-    <div class="acts" style="grid-template-columns:1fr;">
-      <button class="act" data-a="newNote"><span class="swatch" style="background:var(--formula)22;">📝</span>Not Ekle</button>
+    <div class="chips" style="margin-bottom:12px;">
+      <div class="chip ${!showArch?'on':''}" data-a="noteView" data-v="active">Notlar${actCount?' · '+actCount:''}</div>
+      <div class="chip ${showArch?'on':''}" data-a="noteView" data-v="archive">Arşiv${archCount?' · '+archCount:''}</div>
     </div>
+    ${!showArch?`<div class="acts" style="grid-template-columns:1fr;">
+      <button class="act" data-a="newNote"><span class="swatch" style="background:var(--formula)22;">📝</span>Not Ekle</button>
+    </div>`:''}
     <div id="panelSlot">${panel&&panel.s==='note'?panelNote():''}</div>
     ${sorted.length?sorted.map(n=>`
       <div class="note ${n.pinned?'pin':''}">
         <div class="noteTop">
           <div class="noteMeta">${n.pinned?'<span class="pinIc">📌</span>':''}${new Date(n.time).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})} · ${hhmm(n.time)}${byTag(n)}</div>
           <div class="noteBtns">
-            <button data-a="pinNote" data-id="${n.id}" title="sabitle">${n.pinned?'★':'☆'}</button>
+            ${n.archived?'':`<button data-a="pinNote" data-id="${n.id}" title="sabitle">${n.pinned?'★':'☆'}</button>`}
+            <button data-a="archNote" data-id="${n.id}" title="${n.archived?'geri al':'arşivle'}">${n.archived?'↩':'📥'}</button>
             <button data-a="editNote" data-id="${n.id}">✎</button>
             <button data-a="delNote" data-id="${n.id}">✕</button>
           </div>
         </div>
         <div class="noteBody">${esc(n.body).replace(/\n/g,'<br>')}</div>
       </div>`).join('')
-      :`<div class="blank">Henüz not yok.<br>Doktor önerisi, gözlem, soru — aklınızda kalması gereken her şey.</div>`}`;
+      :`<div class="blank">${showArch?'Arşivde not yok.':'Henüz not yok.<br>Doktor önerisi, gözlem, soru — aklınızda kalması gereken her şey.'}</div>`}`;
 }
 function panelNote(){
   const ed=panel.id?notes.find(n=>n.id===panel.id):null;
   return `<div class="panel">
     <div class="panelTitle">${ed?'Notu düzenle':'Yeni not'}</div>
-    <div class="fld"><textarea id="nBody" rows="5" placeholder="Örn. Doktor: D vitamini 3 damla, 6. ayda kontrol...">${ed?esc(ed.body):''}</textarea></div>
+    <div class="fld"><textarea id="nBody" rows="5" oninput="window.__saveDraft(this.value)" placeholder="Örn. Doktor: D vitamini 3 damla, 6. ayda kontrol...">${ed?esc(ed.body):esc(lsGet(LS_DRAFT,'')||'')}</textarea></div>
+    ${!ed&&lsGet(LS_DRAFT,'')?`<div class="setHint" style="margin:-4px 0 10px;">Yarım kalan yazınız geri getirildi.</div>`:''}
     <div class="row2">
       <div class="fld"><label>Tarih</label><input type="date" id="nDate" value="${ed?localDay(ed.time):today()}"/></div>
       <div class="fld"><label>Saat</label><input type="time" id="nTime" value="${timeOnly(ed?ed.time:null)}"/></div>
@@ -1136,6 +1147,23 @@ function renderHeader(){
   $('hdrName').textContent=BABY;
   $('hdrSub').textContent = age ? `${age} · ${greeting()}` : greeting();
 }
+/* Kullanıcı bir alana yazıyor mu? */
+function isEditing(){
+  const a=document.activeElement;
+  return !!(a && ['INPUT','TEXTAREA','SELECT'].includes(a.tagName));
+}
+/* Arka plan yenilemesi: yazma sırasında içeriği YENİDEN ÇİZMEZ.
+   Aksi halde açık metin kutusu yok edilir, klavye kapanır, yazılan metin gider. */
+let bgPending=false;
+function renderBg(){
+  if(panel || isEditing()){
+    bgPending=true;
+    renderHeader(); renderNet(); renderAlerts();   // sadece güvenli bölgeler
+    return;
+  }
+  bgPending=false;
+  render();
+}
 function render(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   renderHeader(); renderNet(); renderAlerts();
@@ -1212,6 +1240,11 @@ document.addEventListener('click', async ev=>{
   }
   else if(a==='reloadApp'){ location.reload(); return; }
   else if(a==='doExport'){ doExport(); return; }
+  else if(a==='noteView'){ noteView=b.dataset.v; panel=null; }
+  else if(a==='archNote'){
+    const n=notes.find(x=>x.id===b.dataset.id);
+    await mutate({table:'notes',action:'update',id:n.id,row:{archived:!n.archived,pinned:false}});
+  }
   else if(a==='newNote'){ panel={s:'note',id:null}; }
   else if(a==='editNote'){ panel={s:'note',id:b.dataset.id}; }
   else if(a==='delNote'){ await mutate({table:'notes',action:'delete',id:b.dataset.id}); panel=null; }
@@ -1224,8 +1257,8 @@ document.addEventListener('click', async ev=>{
     if(!body){ $('nBody').style.borderColor='var(--danger)'; return; }
     const iso=combineDT($('nDate').value||today(), $('nTime').value);
     if(panel.id) await mutate({table:'notes',action:'update',id:panel.id,row:{body,time:iso}});
-    else await mutate({table:'notes',action:'insert',row:{body,time:iso,recorded_by:whoAmI()}});
-    panel=null;
+    else await mutate({table:'notes',action:'insert',row:{body,time:iso,recorded_by:whoAmI(),archived:false}});
+    lsSet(LS_DRAFT,''); panel=null;
   }
   else if(a==='setWho'){ setWhoAmI(b.dataset.v||null); }
   else if(a==='careCog'){ carePanel = carePanel===b.dataset.k?null:b.dataset.k; }
@@ -1270,6 +1303,8 @@ document.addEventListener('change',(ev)=>{
   }
 });
 
+window.__saveDraft=(v)=>{ if(!panel||panel.id) return; lsSet(LS_DRAFT,v); };
+
 /* ---- push ---- */
 function b64ToU8(s){
   const p='='.repeat((4-s.length%4)%4), bb=(s+p).replace(/-/g,'+').replace(/_/g,'/');
@@ -1301,7 +1336,7 @@ async function setupPush(){
 
 /* ---- data ---- */
 async function refetch(){
-  if(!online) { render(); return; }
+  if(!online) { renderBg(); return; }
   try{
   const [a,b,c,d,e,v,nt]=await Promise.all([
     supabase.from('entries').select('*').order('time',{ascending:false}),
@@ -1320,8 +1355,8 @@ async function refetch(){
   if(!v.error) vaccines=v.data;
   if(!nt.error) notes=nt.data;
   cacheSnapshot();
-  render();
-  }catch(err){ online=false; render(); }
+  renderBg();
+  }catch(err){ online=false; renderBg(); }
 }
 function showLogin(){ document.title='Bebek Takip'; $('loginScreen').style.display='flex'; $('appScreen').style.display='none'; $('tabs').style.display='none'; }
 function showApp(){ document.title=BABY+' · Bebek Takip'; $('loginScreen').style.display='none'; $('appScreen').style.display='block'; $('tabs').style.display='flex'; }
@@ -1333,7 +1368,7 @@ async function start(){
   setupPush();
   ['entries','diapers','care_logs','growth','settings','vaccines','notes'].forEach(t=>
     supabase.channel(t+'-ch').on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
-  setInterval(render,30000);
+  setInterval(renderBg,30000);
 }
 supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 supabase.auth.getSession().then(({data})=>{ if(data.session){ showApp(); start(); } else showLogin(); });
