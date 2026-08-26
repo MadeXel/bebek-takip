@@ -1,4 +1,4 @@
-const CACHE = 'bebek-takip-v8';
+const CACHE = 'bebek-takip-v10';
 const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -13,12 +13,35 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+function isHtml(req){
+  return req.mode === 'navigate' ||
+         (req.headers.get('accept')||'').includes('text/html') ||
+         new URL(req.url).pathname.endsWith('/index.html');
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.hostname.endsWith('.supabase.co')) return;  // API trafiğini asla önbelleğe alma
+  if (url.hostname.endsWith('.supabase.co')) return;   // API trafiği asla önbelleğe alınmaz
 
+  // HTML: ÖNCE AĞ. Böylece yeni sürüm hemen gelir; ağ yoksa önbellekten açılır.
+  if (isHtml(req)) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c=>c.put('./index.html', copy)).catch(()=>{});
+          }
+          return res;
+        })
+        .catch(() => caches.match('./index.html').then(r => r || caches.match('./')))
+    );
+    return;
+  }
+
+  // Diğer varlıklar (ikon, yazı tipi, kütüphane): önce önbellek, arkada tazele
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {

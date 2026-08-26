@@ -34,10 +34,11 @@
   :root{ --r:16px; }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;background:var(--ink);}
+  body{min-height:100dvh;}
   body{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;
     transition:background .25s ease,color .25s ease;}
 
-  .shell{max-width:460px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px 96px;}
+  .shell{max-width:460px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px 110px;min-height:100dvh;}
 
   /* login */
   .loginWrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -1209,6 +1210,7 @@ document.addEventListener('click', async ev=>{
     else await mutate({table:'growth',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
   }
+  else if(a==='reloadApp'){ location.reload(); return; }
   else if(a==='doExport'){ doExport(); return; }
   else if(a==='newNote'){ panel={s:'note',id:null}; }
   else if(a==='editNote'){ panel={s:'note',id:b.dataset.id}; }
@@ -1279,6 +1281,15 @@ async function setupPush(){
   if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
   try{
     const reg=await navigator.serviceWorker.register('sw.js');
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      if(!nw) return;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed' && navigator.serviceWorker.controller){
+          $('netbar').innerHTML='<div class="netbar sync" data-a="reloadApp" style="cursor:pointer;">✨ Yeni sürüm hazır — güncellemek için dokunun</div>';
+        }
+      });
+    });
     if(Notification.permission==='default') await Notification.requestPermission();
     if(Notification.permission!=='granted') return;
     let sub=await reg.pushManager.getSubscription();
