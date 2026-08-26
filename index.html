@@ -1330,7 +1330,7 @@ async function setupPush(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToU8(VAPID_PUBLIC_KEY)});
     const j=sub.toJSON();
-    await supabase.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'});
+    await supabase.from('push_subscriptions').upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,last_seen:new Date().toISOString()},{onConflict:'endpoint'});
   }catch(e){ console.error('push',e); }
 }
 
