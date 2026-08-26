@@ -256,6 +256,8 @@
   .noteBtns button{background:none;border:none;color:var(--muted);font-size:13px;padding:3px 5px;cursor:pointer;}
   .noteBody{font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
 
+  .linkBtn{background:none;border:none;color:var(--milk);font-size:12px;cursor:pointer;
+    font-family:'Inter',sans-serif;padding:6px 10px;text-decoration:underline;}
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
     border-top:1px solid var(--line);display:flex;padding:7px 4px calc(7px + env(safe-area-inset-bottom));
     max-width:460px;margin:0 auto;}
@@ -432,7 +434,7 @@ const VACCINES=[
 const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
 let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],notes=[],settings={};
-let tab='feed', dsel={feed:today(),diaper:today()}, panel=null, showSettings=false, carePanel=null, noteView='active', supabase;
+let tab='feed', dsel={feed:today(),diaper:today(),care:today()}, panel=null, showSettings=false, carePanel=null, noteView='active', supabase;
 
 /* ---- rhythm strip ---- */
 function rhythmStrip(dateStr, mode){
@@ -944,6 +946,8 @@ function viewDiaper(){
     </div>
     <div class="acts c3">${Object.entries(DIAPER).map(([k,m])=>
       `<button class="act" data-a="quickDiaper" data-k="${k}"><span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}</div>
+    <div style="text-align:center;margin:-6px 0 12px;">
+      <button class="linkBtn" data-a="addDiaperTimed">⏱ saat seçerek ekle</button></div>
     <div id="panelSlot">${panel&&panel.s==='diaper'?panelDiaper():''}</div>
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(d=>{
       const m=DIAPER[d.kind];
@@ -953,18 +957,19 @@ function viewDiaper(){
     }).join(''):`<div class="blank">Bu gün için kayıt yok.<br>Yukarıdan tek dokunuşla ekleyin.</div>`}`;
 }
 function panelDiaper(){
-  const ed=diapers.find(d=>d.id===panel.id);
-  if(!ed) return '';
-  return `<div class="panel"><div class="panelTitle">Bez kaydı düzenle</div>
+  const ed=panel.id?diapers.find(d=>d.id===panel.id):null;
+  if(panel.id&&!ed) return '';
+  return `<div class="panel"><div class="panelTitle">Bez kaydı ${ed?'düzenle':'ekle'} · ${dayLabel(dsel.diaper).replace(/^(Bugün|Dün) · /,'')}</div>
     <div class="chips">${Object.entries(DIAPER).map(([k,m])=>`<div class="chip ${k===panel.k?'on':''}" data-a="pickDiaperKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
-    <div class="fld"><label>Saat</label><input type="time" id="dTime" value="${timeOnly(ed.time)}"/></div>
+    <div class="fld"><label>Saat</label><input type="time" id="dTime" value="${timeOnly(ed?ed.time:null)}"/></div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
-      <button class="bDel" data-a="delDiaper" data-id="${ed.id}">Sil</button>
+      ${ed?`<button class="bDel" data-a="delDiaper" data-id="${ed.id}">Sil</button>`:''}
       <button class="bSave" data-a="saveDiaper">Kaydet</button></div></div>`;
 }
 
 /* ---- CARE ---- */
 function careToday(k){ return careLogs.filter(c=>c.kind===k&&isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
+function careOn(k,ds){ return careLogs.filter(c=>c.kind===k&&localDay(c.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time)); }
 function carePerDay(k){ const v=parseInt(settings['care_'+k+'_perday']); return isNaN(v)?(CARE[k].daily||0):v; }
 function careInterval(k){ const v=parseFloat(settings['care_'+k+'_interval']); return isNaN(v)?8:v; }
 function careTime(k){ return settings['reminder_'+k+'_time']||'09:00'; }
@@ -985,7 +990,8 @@ const DOSE_OPTS=[0,1,2,3,4,5,6];
 const IV_OPTS=[3,4,6,8,12];
 
 function viewCare(){
-  const rows=Object.entries(CARE).map(([kind,m])=>{
+  const ds=dsel.care, isTodayView = ds===today();
+  const rows=isTodayView?Object.entries(CARE).map(([kind,m])=>{
     const list=careToday(kind), n=list.length;
     const target=carePerDay(kind);
     const done=target>0 && n>=target;
@@ -1031,14 +1037,35 @@ function viewCare(){
         `:''}
       </div>`:''}
     </div>`;
-  }).join('');
+  }).join(''):'';
 
-  const log=careLogs.filter(c=>isToday(c.time)).sort((a,b)=>new Date(b.time)-new Date(a.time));
-  return rows+(log.length?`<div class="listLabel">Bugünün bakım kayıtları</div>`+log.map(c=>
+  const past = !isTodayView ? `<div class="stats">${Object.entries(CARE).map(([kind,m])=>
+      `<div class="stat" style="min-width:0;padding:10px 8px;"><div class="statLabel">${m.ic}</div><div class="statVal">${careOn(kind,ds).length}</div></div>`
+    ).join('')}</div>` : '';
+
+  const log=careLogs.filter(c=>localDay(c.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
+  return dateBar('care')+rows+past+`
+    <div style="text-align:center;margin:6px 0 12px;">
+      <button class="linkBtn" data-a="addCareTimed">⏱ saat seçerek kayıt ekle</button></div>
+    <div id="panelSlot">${panel&&panel.s==='care'?panelCare():''}</div>`
+    +(log.length?`<div class="listLabel">${isTodayView?'Bugünün':'Bu günün'} bakım kayıtları</div>`+log.map(c=>
     `<div class="item"><div class="bar" style="background:var(--care)"></div>
       <div class="itemMid"><div class="itemName">${CARE[c.kind].name}${byTag(c)}</div><div class="itemMeta">${hhmm(c.time)} · ${ago(c.time)}</div></div>
-      <div class="itemBtns"><button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
-    :`<div class="blank">Bugün için bakım kaydı yok.</div>`);
+      <div class="itemBtns"><button data-a="editCare" data-id="${c.id}">✎</button>
+      <button data-a="delCare" data-id="${c.id}">✕</button></div></div>`).join('')
+    :`<div class="blank">Bu gün için bakım kaydı yok.</div>`);
+}
+function panelCare(){
+  const ed=panel.id?careLogs.find(c=>c.id===panel.id):null;
+  const kind=panel.k;
+  return `<div class="panel">
+    <div class="panelTitle">Bakım kaydı ${ed?'düzenle':'ekle'}</div>
+    <div class="chips">${Object.entries(CARE).map(([k,m])=>
+      `<div class="chip ${k===kind?'on':''}" data-a="pickCareKind" data-k="${k}">${m.ic} ${m.name}</div>`).join('')}</div>
+    <div class="fld"><label>Saat</label><input type="time" id="cTime" value="${timeOnly(ed?ed.time:null)}"/></div>
+    <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
+      ${ed?`<button class="bDel" data-a="delCare" data-id="${ed.id}">Sil</button>`:''}
+      <button class="bSave" data-a="saveCare">Kaydet</button></div></div>`;
 }
 
 /* ---- GROWTH (grams) ---- */
@@ -1209,16 +1236,36 @@ document.addEventListener('click', async ev=>{
     else await mutate({table:'entries',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
   }
-  else if(a==='quickDiaper'){ await mutate({table:'diapers',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}}); dsel.diaper=today(); }
+  else if(a==='quickDiaper'){
+    if(dsel.diaper===today()){
+      await mutate({table:'diapers',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}});
+    } else {
+      panel={s:'diaper',k:b.dataset.k,id:null};   // geçmiş gün: saati sor
+    }
+  }
+  else if(a==='addDiaperTimed'){ panel={s:'diaper',k:'pee',id:null}; }
   else if(a==='editDiaper'){ const d=diapers.find(x=>x.id===b.dataset.id); panel={s:'diaper',k:d.kind,id:d.id}; }
   else if(a==='pickDiaperKind'){ panel={...panel,k:b.dataset.k}; }
   else if(a==='delDiaper'){ await mutate({table:'diapers',action:'delete',id:b.dataset.id}); panel=null; }
   else if(a==='saveDiaper'){
     const iso=combineDT(dsel.diaper, $('dTime').value);
-    await mutate({table:'diapers',action:'update',id:panel.id,row:{kind:panel.k,time:iso}});
+    if(panel.id) await mutate({table:'diapers',action:'update',id:panel.id,row:{kind:panel.k,time:iso}});
+    else await mutate({table:'diapers',action:'insert',row:{kind:panel.k,time:iso,recorded_by:whoAmI()}});
     panel=null;
   }
-  else if(a==='logCare'){ await mutate({table:'care_logs',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}}); }
+  else if(a==='logCare'){
+    if(dsel.care===today()) await mutate({table:'care_logs',action:'insert',row:{kind:b.dataset.k,time:new Date().toISOString(),recorded_by:whoAmI()}});
+    else panel={s:'care',k:b.dataset.k,id:null};
+  }
+  else if(a==='addCareTimed'){ panel={s:'care',k:'vitamin_d',id:null}; }
+  else if(a==='pickCareKind'){ panel={...panel,k:b.dataset.k}; }
+  else if(a==='editCare'){ const c=careLogs.find(x=>x.id===b.dataset.id); panel={s:'care',k:c.kind,id:c.id}; }
+  else if(a==='saveCare'){
+    const iso=combineDT(dsel.care, $('cTime').value);
+    if(panel.id) await mutate({table:'care_logs',action:'update',id:panel.id,row:{kind:panel.k,time:iso}});
+    else await mutate({table:'care_logs',action:'insert',row:{kind:panel.k,time:iso,recorded_by:whoAmI()}});
+    panel=null;
+  }
   else if(a==='undoCare'||a==='delCare'){ await mutate({table:'care_logs',action:'delete',id:b.dataset.id}); }
   else if(a==='newGrowth'){ panel={s:'growth',id:null,birth:!growth.some(x=>x.is_birth)}; }
   else if(a==='editGrowth'){ panel={s:'growth',id:b.dataset.id}; }
