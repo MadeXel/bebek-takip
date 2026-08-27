@@ -362,7 +362,7 @@ const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
 const LOGIN_EMAIL="aile@bebektakip.app";
 const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
 const BABY="Alp";
-const APP_VERSION="19";
+const APP_VERSION="20";
 
 /* ---- theme ---- */
 function applyTheme(t){
@@ -1332,13 +1332,15 @@ const MELODIES={
    bass:[['C3',4],['A2',4],['F2',4],['G2',4],['C3',4]]},
 };
 
-let AC=null, snd={playing:false, key:null, nodes:[], gain:null, endAt:0, tick:null, melTimer:null, el:null, live:false};
 
-function soundPrefs(){ return Object.assign({key:'white',vol:45,durIdx:3}, lsGet(LS_SND,{})); }
-function saveSoundPrefs(p){ lsSet(LS_SND,p); }
+/* ---- Ses üretimi: önce dosyaya render edilir, sonra <audio> ile çalınır.
+   Sebep: iOS arka planda Web Audio'yu askıya alır, medya öğesini almaz. ---- */
+const LOOP_SEC={fire:60,forest:60,rain:40,wave:45};
+const bufCache={};      // key -> AudioBuffer (ham, kazançsız)
+const urlCache={};      // key -> {url, vol}
 
-function noiseBuffer(ctx,type){
-  const len=ctx.sampleRate*5, buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
+function noiseBuffer(ctx,type,seconds){
+  const len=Math.ceil(ctx.sampleRate*(seconds||5)), buf=ctx.createBuffer(1,len,ctx.sampleRate), d=buf.getChannelData(0);
   if(type==='brown'){ let last=0;
     for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+0.02*w)/1.02; d[i]=last*3.2; }
   } else if(type==='pink'){
@@ -1351,15 +1353,15 @@ function noiseBuffer(ctx,type){
   return buf;
 }
 
-function startNoise(ctx,key,out){
-  const nodes=[];
+/* Tüm olaylar [0,dur] aralığında önceden planlanır (offline render için şart) */
+function scheduleSound(ctx,key,out,dur){
   const BASE={white:'white',pink:'pink',fan:'pink',hairdryer:'pink',rain:'white',
               forest:'pink',vacuum:'brown',car:'brown',fire:'brown',
               brown:'brown',womb:'brown',wave:'brown',heart:'brown'};
   const src=ctx.createBufferSource();
-  src.buffer=noiseBuffer(ctx,BASE[key]||'white'); src.loop=true;
+  src.buffer=noiseBuffer(ctx,BASE[key]||'white',6); src.loop=true;
   const filt=ctx.createBiquadFilter();
-  let last=src;
+  let last=src, level=1;
 
   switch(key){
     case 'rain':      filt.type='bandpass'; filt.frequency.value=1500; filt.Q.value=0.55; break;
@@ -1368,239 +1370,210 @@ function startNoise(ctx,key,out){
     case 'wave':      filt.type='lowpass';  filt.frequency.value=700;  filt.Q.value=0.7;  break;
     case 'heart':     filt.type='lowpass';  filt.frequency.value=180;  break;
     case 'forest':    filt.type='bandpass'; filt.frequency.value=900;  filt.Q.value=0.45; break;
-    case 'fire':      filt.type='lowpass';  filt.frequency.value=520;  filt.Q.value=0.6;  break;
+    case 'fire':      filt.type='lowpass';  filt.frequency.value=760;  filt.Q.value=0.5; level=0.55; break;
     case 'car':       filt.type='lowpass';  filt.frequency.value=260;  filt.Q.value=1.1;  break;
     case 'vacuum':    filt.type='lowpass';  filt.frequency.value=780;  filt.Q.value=3.2;  break;
     case 'hairdryer': filt.type='bandpass'; filt.frequency.value=2100; filt.Q.value=0.5;  break;
     case 'brown':     filt.type='lowpass';  filt.frequency.value=1200; break;
     default:          filt.type='lowpass';  filt.frequency.value=14000;
   }
-  last.connect(filt); last=filt; nodes.push(src,filt);
+  const lvl=ctx.createGain(); lvl.gain.value=level;
+  last.connect(filt); filt.connect(lvl); last=lvl;
 
-  // motor uğultusu (süpürge / saç kurutma / araba)
+  // motor uğultusu
   const HUM={vacuum:[118,0.055],hairdryer:[152,0.035],car:[62,0.075]};
-  if(HUM[key]){
-    const [f,a]=HUM[key];
-    [1,2].forEach((m,i)=>{
-      const o=ctx.createOscillator(), g=ctx.createGain();
-      o.type='sawtooth'; o.frequency.value=f*m;
-      g.gain.value=a/(i+1.6);
-      o.connect(g); g.connect(out); o.start();
-      nodes.push(o,g);
-    });
+  if(HUM[key]){ const [f,a]=HUM[key];
+    [1,2].forEach((m,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sawtooth'; o.frequency.value=f*m; g.gain.value=a/(i+1.6);
+      o.connect(g); g.connect(out); o.start(0); o.stop(dur); });
   }
-
   // yavaş dalgalanma
-  const LFO={wave:[0.09,260],womb:[0.25,90],forest:[0.07,420],car:[0.05,70],fire:[0.4,180]};
-  if(LFO[key]){
-    const [rate,depth]=LFO[key];
+  const LFO={wave:[0.09,260],womb:[0.25,90],forest:[0.07,420],car:[0.05,70]};
+  if(LFO[key]){ const [rate,depth]=LFO[key];
     const lfo=ctx.createOscillator(), lg=ctx.createGain();
     lfo.frequency.value=rate; lg.gain.value=depth;
-    lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
-    nodes.push(lfo,lg);
+    lfo.connect(lg); lg.connect(filt.frequency); lfo.start(0); lfo.stop(dur);
   }
-
-  // kalp atışı: "lub-dub"
+  // kalp atışı
   if(key==='heart'){
-    const hg=ctx.createGain(); hg.gain.value=0;
-    last.connect(hg); last=hg; nodes.push(hg);
-    const beat=(t)=>{
+    const hg=ctx.createGain(); hg.gain.value=0; last.connect(hg); last=hg;
+    for(let t=0.1;t<dur;t+=60/70){
       hg.gain.setValueAtTime(0.001,t);
       hg.gain.exponentialRampToValueAtTime(1,t+0.04);
       hg.gain.exponentialRampToValueAtTime(0.001,t+0.22);
       hg.gain.setValueAtTime(0.001,t+0.30);
       hg.gain.exponentialRampToValueAtTime(0.7,t+0.34);
       hg.gain.exponentialRampToValueAtTime(0.001,t+0.55);
-    };
-    let t=ctx.currentTime+0.1;
-    snd.melTimer=setInterval(()=>{ if(!snd.playing) return;
-      while(t<ctx.currentTime+2){ beat(t); t+=60/70; } },500);
-    while(t<ctx.currentTime+2){ beat(t); t+=60/70; }
+    }
   }
+  last.connect(out);
+  src.start(0); src.stop(dur);
 
-  last.connect(out); src.start();
-
-  // odun ateşi: rastgele çıtırtılar
+  /* ---- ODUN ATEŞİ ----
+     Gerçek ateş: altta uğultu + sürekli küçük çıtırtılar + arada
+     tek tük sert "çat" sesleri. Çıtırtılar öbekler hâlinde gelir. */
   if(key==='fire'){
-    const cs=ctx.createBufferSource();
-    cs.buffer=noiseBuffer(ctx,'white'); cs.loop=true;
-    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
-    const cg=ctx.createGain(); cg.gain.value=0;
-    cs.connect(hp); hp.connect(cg); cg.connect(out); cs.start();
-    nodes.push(cs,hp,cg);
-    let t=ctx.currentTime+0.2;
-    snd.melTimer=setInterval(()=>{
-      if(!snd.playing) return;
-      while(t<ctx.currentTime+2){
-        const amp=0.05+Math.random()*0.22;
-        cg.gain.setValueAtTime(0.0001,t);
-        cg.gain.exponentialRampToValueAtTime(amp,t+0.004);
-        cg.gain.exponentialRampToValueAtTime(0.0001,t+0.05+Math.random()*0.07);
-        t += 0.08+Math.random()*0.55;
+    // alçak uğultu katmanı
+    const rs=ctx.createBufferSource(); rs.buffer=noiseBuffer(ctx,'brown',6); rs.loop=true;
+    const rf=ctx.createBiquadFilter(); rf.type='bandpass'; rf.frequency.value=180; rf.Q.value=0.7;
+    const rg=ctx.createGain(); rg.gain.value=0.5;
+    rs.connect(rf); rf.connect(rg); rg.connect(out); rs.start(0); rs.stop(dur);
+
+    const cbuf=noiseBuffer(ctx,'white',2);
+    const pop=(t,amp,freq,q,len)=>{
+      const s=ctx.createBufferSource(); s.buffer=cbuf;
+      s.playbackRate.value=0.8+Math.random()*0.5;
+      const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq; bp.Q.value=q;
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(amp,t+0.0012);      // çok sert atak
+      g.gain.exponentialRampToValueAtTime(0.0001,t+len);
+      s.connect(bp); bp.connect(g); g.connect(out);
+      s.start(t, Math.random()*1.5); s.stop(t+len+0.02);
+    };
+    let t=0.05;
+    while(t<dur){
+      // öbek: 2-7 minik çıtırtı, birbirine yakın
+      const n=2+Math.floor(Math.random()*6);
+      let ct=t;
+      for(let i=0;i<n;i++){
+        pop(ct, 0.05+Math.random()*0.18, 1200+Math.random()*3200, 3+Math.random()*5,
+            0.008+Math.random()*0.03);
+        ct += 0.012+Math.random()*0.06;
       }
-    },400);
+      // arada sert bir "çat"
+      if(Math.random()<0.22){
+        pop(ct+0.05, 0.35+Math.random()*0.3, 600+Math.random()*900, 1.5+Math.random()*2,
+            0.05+Math.random()*0.09);
+      }
+      t = ct + 0.15+Math.random()*0.75;
+    }
   }
 
-  // orman: seyrek, yumuşak kuş sesleri
+  // orman: seyrek kuşlar
   if(key==='forest'){
-    let t=ctx.currentTime+2;
-    snd.melTimer=setInterval(()=>{
-      if(!snd.playing) return;
-      while(t<ctx.currentTime+3){
-        const o=ctx.createOscillator(), g=ctx.createGain();
-        const f0=1700+Math.random()*1400;
-        o.type='sine';
-        o.frequency.setValueAtTime(f0,t);
-        o.frequency.exponentialRampToValueAtTime(f0*(1.25+Math.random()*0.5),t+0.07);
-        o.frequency.exponentialRampToValueAtTime(f0*0.85,t+0.16);
-        g.gain.setValueAtTime(0.0001,t);
-        g.gain.exponentialRampToValueAtTime(0.035,t+0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
-        o.connect(g); g.connect(out); o.start(t); o.stop(t+0.25);
-        t += 2.5+Math.random()*5;
-      }
-    },900);
+    let t=1.5;
+    while(t<dur){
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      const f0=1700+Math.random()*1400;
+      o.type='sine';
+      o.frequency.setValueAtTime(f0,t);
+      o.frequency.exponentialRampToValueAtTime(f0*(1.25+Math.random()*0.5),t+0.07);
+      o.frequency.exponentialRampToValueAtTime(f0*0.85,t+0.16);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.035,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t+0.25);
+      t += 2.5+Math.random()*5;
+    }
   }
-
-  return nodes;
 }
 
-function makeReverb(ctx,out){
-  // Basit geri beslemeli yankı: müzik kutusuna oda hissi verir
-  const dly=ctx.createDelay(1.0); dly.delayTime.value=0.16;
-  const fb=ctx.createGain(); fb.gain.value=0.34;
-  const wet=ctx.createGain(); wet.gain.value=0.30;
-  const damp=ctx.createBiquadFilter(); damp.type='lowpass'; damp.frequency.value=2600;
-  dly.connect(damp); damp.connect(fb); fb.connect(dly); damp.connect(wet); wet.connect(out);
-  return dly;
+/* Kusursuz döngü: sonu başına yumuşak geçişle bindirilir */
+async function renderLoop(key){
+  if(bufCache[key]) return bufCache[key];
+  const sec=LOOP_SEC[key]||30, XF=2, SR=44100;
+  const OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const oc=new OC(1,Math.ceil((sec+XF)*SR),SR);
+  const g=oc.createGain(); g.gain.value=1; g.connect(oc.destination);
+  scheduleSound(oc,key,g,sec+XF);
+  const r=await oc.startRendering();
+  const src=r.getChannelData(0);
+  const n=Math.floor(sec*SR), xn=Math.floor(XF*SR);
+  const outBuf=oc.createBuffer(1,n,SR), d=outBuf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=src[i];
+  for(let i=0;i<xn;i++){ const f=i/xn; d[i]=src[i]*f + src[n+i]*(1-f); }
+  // tepe değeri normalize et
+  let peak=0; for(let i=0;i<n;i++){ const a=Math.abs(d[i]); if(a>peak) peak=a; }
+  if(peak>0.001){ const k=0.92/peak; for(let i=0;i<n;i++) d[i]*=k; }
+  bufCache[key]=outBuf;
+  return outBuf;
 }
 
-/* Piyano/müzik kutusu benzeri nota: birden çok harmonik, her biri ayrı sönümle */
-function pluck(ctx,freq,dur,t,out,rev,vel){
-  vel=vel||1;
-  const PARTIALS=[[1,1.00,1.00],[2,0.42,0.62],[3,0.20,0.44],[4,0.11,0.32],[5.4,0.06,0.24]];
-  const body=ctx.createGain();
-  body.gain.value=1;
-  const tone=ctx.createBiquadFilter();
-  tone.type='lowpass';
-  tone.frequency.setValueAtTime(Math.min(freq*7+1800,9000),t);
-  tone.frequency.exponentialRampToValueAtTime(Math.max(freq*2.2,320),t+Math.min(dur,2.2));
-  body.connect(tone); tone.connect(out); if(rev) tone.connect(rev);
-
-  PARTIALS.forEach(([mult,amp,decayMul],i)=>{
-    const f=freq*mult;
-    if(f>ctx.sampleRate/2.2) return;
-    const o=ctx.createOscillator();
-    o.type = i===0 ? 'triangle' : 'sine';
-    o.frequency.value=f;
-    if(i>0) o.detune.value=(i%2?4:-4);          // hafif ahenksizlik = doğallık
-    const g=ctx.createGain();
-    const peak=0.30*amp*vel;
-    const rel=Math.max(dur*decayMul*1.9,0.35);
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(peak,t+0.012);       // yumuşak atak
-    g.gain.exponentialRampToValueAtTime(peak*0.30,t+rel*0.35);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+rel);
-    o.connect(g); g.connect(body);
-    o.start(t); o.stop(t+rel+0.06);
-  });
+function bufferToWavUrl(buf,gain){
+  const d=buf.getChannelData(0), n=d.length, SR=buf.sampleRate;
+  const ab=new ArrayBuffer(44+n*2), v=new DataView(ab);
+  const w=(o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4,36+n*2,true); w(8,'WAVE'); w(12,'fmt ');
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,SR,true); v.setUint32(28,SR*2,true); v.setUint16(32,2,true);
+  v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  let o=44;
+  for(let i=0;i<n;i++){ let s=d[i]*gain; s=s<-1?-1:s>1?1:s; v.setInt16(o,s*32767,true); o+=2; }
+  return URL.createObjectURL(new Blob([ab],{type:'audio/wav'}));
 }
 
-/* Yumuşak bas eşlik — sıcaklık katar */
-function bassNote(ctx,freq,dur,t,out){
-  const o=ctx.createOscillator(), g=ctx.createGain(), lp=ctx.createBiquadFilter();
-  o.type='sine'; o.frequency.value=freq;
-  lp.type='lowpass'; lp.frequency.value=420;
-  g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(0.13,t+0.09);
-  g.gain.exponentialRampToValueAtTime(0.055,t+dur*0.55);
-  g.gain.exponentialRampToValueAtTime(0.0001,t+dur*1.05);
-  o.connect(lp); lp.connect(g); g.connect(out);
-  o.start(t); o.stop(t+dur*1.1+0.05);
+let snd={playing:false, key:null, endAt:0, tick:null, el:null, loading:false};
+
+function soundPrefs(){ return Object.assign({key:'womb',vol:45,durIdx:3}, lsGet(LS_SND,{})); }
+function saveSoundPrefs(p){ lsSet(LS_SND,p); }
+function volToGain(v){ return Math.pow(Math.max(v,0)/100,1.8)*0.95; }
+
+function audioEl(){
+  let el=document.getElementById('sndEl');
+  if(!el){
+    el=document.createElement('audio');
+    el.id='sndEl'; el.loop=true; el.preload='auto'; el.setAttribute('playsinline','');
+    document.body.appendChild(el);
+  }
+  return el;
 }
-
-function startMelody(ctx,key,out){
-  const M=MELODIES[key], spb=60/M.bpm;
-  const rev=makeReverb(ctx,out);
-  let idx=0, bIdx=0, next=ctx.currentTime+0.25, bNext=next, beatPos=0;
-
-  snd.melTimer=setInterval(()=>{
-    if(!snd.playing) return;
-    const horizon=ctx.currentTime+1.8;
-    while(next<horizon){
-      const [n,b]=M.notes[idx];
-      // ölçü başlarını hafif vurgula (nefes alan bir ritim)
-      const vel = (beatPos%4<0.01)?1.0 : (beatPos%2<0.01?0.88:0.78);
-      pluck(ctx,nf(n),b*spb,next,out,rev,vel);
-      next += b*spb; beatPos += b;
-      idx=(idx+1)%M.notes.length;
-      if(idx===0){ next += spb*2; beatPos=0; bNext=next; bIdx=0; }  // döngüler arası nefes
-    }
-    if(M.bass){
-      while(bNext<horizon){
-        const [bn,bb]=M.bass[bIdx%M.bass.length];
-        bassNote(ctx,nf(bn),bb*spb,bNext,out);
-        bNext += bb*spb; bIdx++;
-      }
-    }
-  },220);
-  return [];
-}
-
-function startFile(ctx,key,out){
-  const el=new Audio(AUDIO_FILES[key]);
-  el.loop=true; el.preload='auto'; el.crossOrigin='anonymous';
-  let node;
-  try{ node=ctx.createMediaElementSource(el); node.connect(out); }
-  catch(e){ el.volume=0.9; }      // bağlanamazsa doğrudan çal
-  el.play().catch(()=>{});
-  snd.el=el;
-  return node?[node]:[];
+async function urlFor(key,vol){
+  const c=urlCache[key];
+  if(c && c.vol===vol) return c.url;
+  const buf=await renderLoop(key);
+  if(c) { try{ URL.revokeObjectURL(c.url); }catch(e){} }
+  const url=bufferToWavUrl(buf, volToGain(vol));
+  urlCache[key]={url,vol};
+  return url;
 }
 
 async function playSound(key){
-  stopSound(true);
   const p=soundPrefs(); p.key=key; saveSoundPrefs(p);
+  snd.loading=true; snd.key=key; render();
   try{
-    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
-    if(AC.state==='suspended') await AC.resume();
-  }catch(e){ return; }
-  const g=AC.createGain();
-  g.gain.value=0.0001;
-  g.connect(AC.destination);
-  snd.gain=g; snd.key=key; snd.playing=true;
-
-  if(SOUNDS[key].kind==='noise'){
-    snd.nodes=startNoise(AC,key,g); snd.live=false;
-  } else if(await hasAudio(key)){
-    snd.nodes=startFile(AC,key,g); snd.live=true;      // gerçek kayıt
-  } else {
-    snd.nodes=startMelody(AC,key,g); snd.live=false;   // notadan sentez
+    const url=await urlFor(key,p.vol);
+    const el=audioEl();
+    el.src=url; el.loop=true; el.currentTime=0;
+    await el.play();
+    snd.el=el; snd.playing=true; snd.loading=false;
+    const mins=DURATIONS[p.durIdx];
+    snd.endAt = mins? Date.now()+mins*60000 : 0;
+    if(snd.tick) clearInterval(snd.tick);
+    snd.tick=setInterval(tickSound,1000);
+    setMediaSession(key);
+  }catch(e){
+    console.error('ses',e);
+    snd.loading=false; snd.playing=false; snd.key=null;
   }
-
-  const target=volToGain(p.vol);
-  g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002), AC.currentTime+1.2);
-
-  const mins=DURATIONS[p.durIdx];
-  snd.endAt = mins? Date.now()+mins*60000 : 0;
-  snd.tick=setInterval(tickSound,1000);
   render();
 }
-function volToGain(v){ return Math.pow(Math.max(v,0)/100,1.8)*0.9; }
+
+function setMediaSession(key){
+  if(!('mediaSession' in navigator)) return;
+  try{
+    navigator.mediaSession.metadata=new MediaMetadata({
+      title:SOUNDS[key].name, artist:BABY, album:'Bebek Takip',
+      artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}],
+    });
+    navigator.mediaSession.playbackState='playing';
+    navigator.mediaSession.setActionHandler('pause',()=>stopSound());
+    navigator.mediaSession.setActionHandler('stop',()=>stopSound());
+    navigator.mediaSession.setActionHandler('play',()=>{ if(snd.key) playSound(snd.key); });
+  }catch(e){}
+}
 
 function tickSound(){
   if(!snd.playing) return;
   if(snd.endAt){
     const left=snd.endAt-Date.now();
     if(left<=0){ stopSound(); return; }
-    if(left<=20000 && snd.gain && AC){   // son 20 sn yumuşak kısıl
-      snd.gain.gain.linearRampToValueAtTime(0.0001, AC.currentTime+left/1000);
+    if(left<=20000 && snd.el){                 // son 20 sn yumuşak kısıl
+      try{ snd.el.volume=Math.max(0,Math.min(1,left/20000)); }catch(e){}
     }
   }
-  const el=document.getElementById('sndLeft');
-  if(el) el.textContent=soundLeftText();
-  const el2=document.getElementById('npLeft');
-  if(el2) el2.textContent=soundLeftText();
+  const a=document.getElementById('sndLeft'); if(a) a.textContent=soundLeftText();
+  const b=document.getElementById('npLeft');  if(b) b.textContent=soundLeftText();
 }
 function soundLeftText(){
   if(!snd.playing) return '';
@@ -1610,33 +1583,31 @@ function soundLeftText(){
 }
 function stopSound(silent){
   if(snd.tick) clearInterval(snd.tick);
-  if(snd.melTimer) clearInterval(snd.melTimer);
-  snd.tick=null; snd.melTimer=null;
-  try{
-    if(snd.gain&&AC){ snd.gain.gain.cancelScheduledValues(AC.currentTime);
-      snd.gain.gain.setValueAtTime(snd.gain.gain.value,AC.currentTime);
-      snd.gain.gain.linearRampToValueAtTime(0.0001,AC.currentTime+0.35); }
-    snd.nodes.forEach(n=>{ try{ n.stop&&n.stop(AC.currentTime+0.4); }catch(e){} });
-  }catch(e){}
-  try{ if(snd.el){ snd.el.pause(); snd.el.src=''; } }catch(e){}
-  snd.el=null; snd.nodes=[]; snd.playing=false; snd.key=null; snd.endAt=0; snd.live=false;
+  snd.tick=null;
+  try{ if(snd.el){ snd.el.pause(); snd.el.currentTime=0; snd.el.volume=1; } }catch(e){}
+  if('mediaSession' in navigator){ try{ navigator.mediaSession.playbackState='none'; }catch(e){} }
+  snd.playing=false; snd.key=null; snd.endAt=0; snd.loading=false;
   if(!silent) render();
 }
-function setVolume(v){
+async function setVolume(v){
   const p=soundPrefs(); p.vol=Number(v); saveSoundPrefs(p);
-  if(snd.playing&&snd.gain&&AC){
-    snd.gain.gain.cancelScheduledValues(AC.currentTime);
-    snd.gain.gain.setTargetAtTime(Math.max(volToGain(p.vol),0.0001),AC.currentTime,0.08);
-  }
   const lb=document.getElementById('volLbl'); if(lb) lb.textContent='%'+p.vol;
+  if(!snd.playing || !snd.key) return;
+  // iOS'ta el.volume yok sayılır; ses seviyesi dosyaya gömülür
+  clearTimeout(setVolume._t);
+  setVolume._t=setTimeout(async()=>{
+    if(!snd.playing) return;
+    const key=snd.key, pos=snd.el?snd.el.currentTime:0;
+    const url=await urlFor(key,p.vol);
+    try{ snd.el.src=url; snd.el.currentTime=pos; await snd.el.play(); }catch(e){}
+  },260);
 }
 function setDuration(i){
   const p=soundPrefs(); p.durIdx=Number(i); saveSoundPrefs(p);
   const mins=DURATIONS[p.durIdx];
   if(snd.playing){
     snd.endAt = mins? Date.now()+mins*60000 : 0;
-    if(snd.gain&&AC){ snd.gain.gain.cancelScheduledValues(AC.currentTime);
-      snd.gain.gain.setTargetAtTime(Math.max(volToGain(p.vol),0.0001),AC.currentTime,0.1); }
+    try{ if(snd.el) snd.el.volume=1; }catch(e){}
   }
   const lb=document.getElementById('durLbl');
   if(lb) lb.textContent = mins? mins+' dakika' : 'Sınırsız';
@@ -1661,7 +1632,7 @@ function viewSound(){
       <div class="sndNowName">${SOUNDS[snd.key].name}</div>
       <div class="sndNowLeft"><span id="sndLeft">${soundLeftText()}</span></div>
       <button class="sndStop" data-a="stopSound">■ Durdur</button>
-    </div>`:`<div class="sndIdle">Bir ses seçin, çalmaya başlasın.</div>`}
+    </div>`:(snd.loading?'':`<div class="sndIdle">Bir ses seçin, çalmaya başlasın.</div>`)}
 
     <div class="sndGrid">${Object.entries(SOUNDS).map(([k,v])=>
       `<button class="sndCard ${snd.playing&&snd.key===k?'on':''}" data-a="playSound" data-k="${k}">
@@ -1676,8 +1647,7 @@ function viewSound(){
       <div class="sldTicks"><span>10dk</span><span>30dk</span><span>90dk</span><span>∞</span></div>
     </div>
     <div class="vnote">Sesler telefonunuzda anlık üretilir; internet gerektirmez. Süre dolunca ses yavaşça kısılarak durur.
-    iPhone'da ekran kilitlenince sesin durabileceğini unutmayın — uzun süreli kullanımda ekranı açık bırakmak veya
-    otomatik kilidi uzatmak gerekebilir.</div>`;
+    Ses, uygulama arka plandayken ve ekran kilitliyken de çalmaya devam eder; kilit ekranından durdurabilirsiniz. İlk seçimde ses birkaç saniye hazırlanır, sonrasında anında başlar.</div>`;
 }
 
 /* ---- alerts ---- */
@@ -1734,7 +1704,7 @@ function isEditing(){
    Aksi halde açık metin kutusu yok edilir, klavye kapanır, yazılan metin gider. */
 let bgPending=false;
 function renderBg(){
-  if(panel || isEditing() || snd.playing){
+  if(panel || isEditing() || snd.playing || snd.loading){
     bgPending=true;
     renderHeader(); renderNet(); renderAlerts();   // sadece güvenli bölgeler
     return;
