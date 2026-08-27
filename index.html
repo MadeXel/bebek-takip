@@ -349,7 +349,7 @@
   <button class="tab" data-tab="growth"><span class="ti">📐</span>Büyüme</button>
   <button class="tab" data-tab="vaccine"><span class="ti">💉</span>Aşı</button>
   <button class="tab" data-tab="note"><span class="ti">📝</span>Notlar</button>
-  <button class="tab" data-tab="sound"><span class="ti">🎵</span>Ninni</button>
+  <button class="tab" data-tab="sound"><span class="ti">🔊</span>Sesler</button>
 </div>
 
 <div id="printArea" class="printArea"></div>
@@ -1171,28 +1171,23 @@ function panelGrowth(){
    Sesler tarayıcıda üretilir (Web Audio API): telif yok, dosya indirilmez,
    çevrimdışı çalışır. */
 const SOUNDS={
-  white:   {name:'Beyaz Gürültü', ic:'⚪', kind:'noise'},
-  pink:    {name:'Pembe Gürültü', ic:'🌸', kind:'noise'},
-  brown:   {name:'Kahverengi',    ic:'🟤', kind:'noise'},
-  rain:    {name:'Yağmur',        ic:'🌧️', kind:'noise'},
-  womb:    {name:'Rahim Sesi',    ic:'🤰', kind:'noise'},
-  heart:   {name:'Kalp Atışı',    ic:'❤️', kind:'noise'},
-  fan:     {name:'Vantilatör',    ic:'💨', kind:'noise'},
-  wave:    {name:'Deniz Dalgası', ic:'🌊', kind:'noise'},
-  brahms:    {name:'Brahms Ninnisi',   ic:'🌙', kind:'melody'},
-  uyusun:    {name:'Uyusun da Büyüsün', ic:'🍼', kind:'melody'},
-  dandini:   {name:'Dandini Dandini',  ic:'🌾', kind:'melody'},
-  silent:    {name:'Sessiz Gece',      ic:'❄️', kind:'melody'},
-  rockabye:  {name:'Ninni Bebek',      ic:'👶', kind:'melody'},
-  twinkle:   {name:'Yıldız Yıldız',    ic:'⭐', kind:'melody'},
-  blacksheep:{name:'Mee Mee Kara Kuzu',ic:'🐑', kind:'melody'},
-  london:    {name:'Londra Köprüsü',   ic:'🌉', kind:'melody'},
-  weasel:    {name:'Hop Gelincik',     ic:'🐰', kind:'melody'},
-  furelise:  {name:'Für Elise',        ic:'🎹', kind:'melody'},
-  swan:      {name:'Kuğu',             ic:'🦢', kind:'melody'},
-  sugarplum: {name:'Şekerleme Perisi', ic:'🧚', kind:'melody'},
-  box:       {name:'Müzik Kutusu',     ic:'🎶', kind:'melody'},
+  womb:      {name:'Anne Karnı',      ic:'🤰', kind:'noise'},
+  heart:     {name:'Kalp Atışı',      ic:'❤️', kind:'noise'},
+  rain:      {name:'Yağmur',          ic:'🌧️', kind:'noise'},
+  wave:      {name:'Deniz Dalgaları', ic:'🌊', kind:'noise'},
+  forest:    {name:'Orman',           ic:'🌲', kind:'noise'},
+  fire:      {name:'Odun Ateşi',      ic:'🔥', kind:'noise'},
+  car:       {name:'Araba Yolculuğu', ic:'🚗', kind:'noise'},
+  fan:       {name:'Vantilatör',      ic:'💨', kind:'noise'},
+  hairdryer: {name:'Saç Kurutma',     ic:'💇', kind:'noise'},
+  vacuum:    {name:'Elektrik Süpürgesi', ic:'🧹', kind:'noise'},
+  white:     {name:'Beyaz Gürültü',   ic:'⚪', kind:'noise'},
+  pink:      {name:'Pembe Gürültü',   ic:'🌸', kind:'noise'},
+  brown:     {name:'Kahverengi',      ic:'🟤', kind:'noise'},
 };
+/* Ninniler şimdilik rafta — MELODIES ve sentez kodu duruyor,
+   SOUNDS'a kind:'melody' girdisi eklenince yeniden görünür. */
+
 const DURATIONS=[10,15,20,30,45,60,90,0]; // 0 = sınırsız
 
 /* Gerçek kayıtlar: audio/ klasörüne konursa otomatik kullanılır.
@@ -1350,34 +1345,58 @@ function noiseBuffer(ctx,type){
 
 function startNoise(ctx,key,out){
   const nodes=[];
-  const base = key==='white'?'white' : (key==='pink'||key==='fan')?'pink':'brown';
+  const BASE={white:'white',pink:'pink',fan:'pink',hairdryer:'pink',rain:'white',
+              forest:'pink',vacuum:'brown',car:'brown',fire:'brown',
+              brown:'brown',womb:'brown',wave:'brown',heart:'brown'};
   const src=ctx.createBufferSource();
-  src.buffer=noiseBuffer(ctx,base); src.loop=true;
+  src.buffer=noiseBuffer(ctx,BASE[key]||'white'); src.loop=true;
   const filt=ctx.createBiquadFilter();
   let last=src;
 
-  if(key==='rain'){ filt.type='bandpass'; filt.frequency.value=1400; filt.Q.value=0.6; }
-  else if(key==='womb'){ filt.type='lowpass'; filt.frequency.value=420; filt.Q.value=0.8; }
-  else if(key==='fan'){ filt.type='lowpass'; filt.frequency.value=900; filt.Q.value=1.6; }
-  else if(key==='wave'){ filt.type='lowpass'; filt.frequency.value=700; filt.Q.value=0.7; }
-  else if(key==='heart'){ filt.type='lowpass'; filt.frequency.value=180; }
-  else { filt.type='lowpass'; filt.frequency.value=key==='brown'?1200:14000; }
-
+  switch(key){
+    case 'rain':      filt.type='bandpass'; filt.frequency.value=1500; filt.Q.value=0.55; break;
+    case 'womb':      filt.type='lowpass';  filt.frequency.value=380;  filt.Q.value=0.9;  break;
+    case 'fan':       filt.type='lowpass';  filt.frequency.value=900;  filt.Q.value=1.6;  break;
+    case 'wave':      filt.type='lowpass';  filt.frequency.value=700;  filt.Q.value=0.7;  break;
+    case 'heart':     filt.type='lowpass';  filt.frequency.value=180;  break;
+    case 'forest':    filt.type='bandpass'; filt.frequency.value=900;  filt.Q.value=0.45; break;
+    case 'fire':      filt.type='lowpass';  filt.frequency.value=520;  filt.Q.value=0.6;  break;
+    case 'car':       filt.type='lowpass';  filt.frequency.value=260;  filt.Q.value=1.1;  break;
+    case 'vacuum':    filt.type='lowpass';  filt.frequency.value=780;  filt.Q.value=3.2;  break;
+    case 'hairdryer': filt.type='bandpass'; filt.frequency.value=2100; filt.Q.value=0.5;  break;
+    case 'brown':     filt.type='lowpass';  filt.frequency.value=1200; break;
+    default:          filt.type='lowpass';  filt.frequency.value=14000;
+  }
   last.connect(filt); last=filt; nodes.push(src,filt);
 
-  // yavaş dalgalanma (deniz / rahim daha doğal olsun)
-  if(key==='wave'||key==='womb'){
+  // motor uğultusu (süpürge / saç kurutma / araba)
+  const HUM={vacuum:[118,0.055],hairdryer:[152,0.035],car:[62,0.075]};
+  if(HUM[key]){
+    const [f,a]=HUM[key];
+    [1,2].forEach((m,i)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='sawtooth'; o.frequency.value=f*m;
+      g.gain.value=a/(i+1.6);
+      o.connect(g); g.connect(out); o.start();
+      nodes.push(o,g);
+    });
+  }
+
+  // yavaş dalgalanma
+  const LFO={wave:[0.09,260],womb:[0.25,90],forest:[0.07,420],car:[0.05,70],fire:[0.4,180]};
+  if(LFO[key]){
+    const [rate,depth]=LFO[key];
     const lfo=ctx.createOscillator(), lg=ctx.createGain();
-    lfo.frequency.value = key==='wave'?0.09:0.25;
-    lg.gain.value = key==='wave'?260:90;
+    lfo.frequency.value=rate; lg.gain.value=depth;
     lfo.connect(lg); lg.connect(filt.frequency); lfo.start();
     nodes.push(lfo,lg);
   }
-  // kalp atışı: düzenli çift vuruş
+
+  // kalp atışı: "lub-dub"
   if(key==='heart'){
     const hg=ctx.createGain(); hg.gain.value=0;
     last.connect(hg); last=hg; nodes.push(hg);
-    const beat=(t)=>{ // ~70 bpm, "lub-dub"
+    const beat=(t)=>{
       hg.gain.setValueAtTime(0.001,t);
       hg.gain.exponentialRampToValueAtTime(1,t+0.04);
       hg.gain.exponentialRampToValueAtTime(0.001,t+0.22);
@@ -1390,7 +1409,51 @@ function startNoise(ctx,key,out){
       while(t<ctx.currentTime+2){ beat(t); t+=60/70; } },500);
     while(t<ctx.currentTime+2){ beat(t); t+=60/70; }
   }
+
   last.connect(out); src.start();
+
+  // odun ateşi: rastgele çıtırtılar
+  if(key==='fire'){
+    const cs=ctx.createBufferSource();
+    cs.buffer=noiseBuffer(ctx,'white'); cs.loop=true;
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
+    const cg=ctx.createGain(); cg.gain.value=0;
+    cs.connect(hp); hp.connect(cg); cg.connect(out); cs.start();
+    nodes.push(cs,hp,cg);
+    let t=ctx.currentTime+0.2;
+    snd.melTimer=setInterval(()=>{
+      if(!snd.playing) return;
+      while(t<ctx.currentTime+2){
+        const amp=0.05+Math.random()*0.22;
+        cg.gain.setValueAtTime(0.0001,t);
+        cg.gain.exponentialRampToValueAtTime(amp,t+0.004);
+        cg.gain.exponentialRampToValueAtTime(0.0001,t+0.05+Math.random()*0.07);
+        t += 0.08+Math.random()*0.55;
+      }
+    },400);
+  }
+
+  // orman: seyrek, yumuşak kuş sesleri
+  if(key==='forest'){
+    let t=ctx.currentTime+2;
+    snd.melTimer=setInterval(()=>{
+      if(!snd.playing) return;
+      while(t<ctx.currentTime+3){
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        const f0=1700+Math.random()*1400;
+        o.type='sine';
+        o.frequency.setValueAtTime(f0,t);
+        o.frequency.exponentialRampToValueAtTime(f0*(1.25+Math.random()*0.5),t+0.07);
+        o.frequency.exponentialRampToValueAtTime(f0*0.85,t+0.16);
+        g.gain.setValueAtTime(0.0001,t);
+        g.gain.exponentialRampToValueAtTime(0.035,t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,t+0.2);
+        o.connect(g); g.connect(out); o.start(t); o.stop(t+0.25);
+        t += 2.5+Math.random()*5;
+      }
+    },900);
+  }
+
   return nodes;
 }
 
@@ -1592,16 +1655,9 @@ function viewSound(){
       <button class="sndStop" data-a="stopSound">■ Durdur</button>
     </div>`:`<div class="sndIdle">Bir ses seçin, çalmaya başlasın.</div>`}
 
-    <div class="listLabel">Beyaz gürültü</div>
-    <div class="sndGrid">${Object.entries(SOUNDS).filter(([,v])=>v.kind==='noise').map(([k,v])=>
+    <div class="sndGrid">${Object.entries(SOUNDS).map(([k,v])=>
       `<button class="sndCard ${snd.playing&&snd.key===k?'on':''}" data-a="playSound" data-k="${k}">
         <span class="sndIc">${v.ic}</span><span>${v.name}</span></button>`).join('')}</div>
-
-    <div class="listLabel">Ninniler</div>
-    <div class="sndGrid">${Object.entries(SOUNDS).filter(([,v])=>v.kind==='melody').map(([k,v])=>
-      `<button class="sndCard ${snd.playing&&snd.key===k?'on':''}" data-a="playSound" data-k="${k}">
-        <span class="sndIc">${v.ic}</span><span>${v.name}</span>
-        ${audioAvail[k]===true?'<span class="sndReal">kayıt</span>':''}</button>`).join('')}</div>
 
     <div class="panel" style="margin-top:14px;">
       <div class="sldRow"><span class="sldLbl">Ses seviyesi</span><span class="sldVal" id="volLbl">%${p.vol}</span></div>
@@ -1612,7 +1668,7 @@ function viewSound(){
       <div class="sldTicks"><span>10dk</span><span>30dk</span><span>90dk</span><span>∞</span></div>
     </div>
     <div class="vnote">Sesler telefonunuzda anlık üretilir; internet gerektirmez. Süre dolunca ses yavaşça kısılarak durur.
-    Ninniler hazır kayıt değil, notalarından anlık çalınır. iPhone'da ekran kilitlenince sesin durabileceğini unutmayın — uzun süreli kullanımda ekranı açık bırakmak veya
+    iPhone'da ekran kilitlenince sesin durabileceğini unutmayın — uzun süreli kullanımda ekranı açık bırakmak veya
     otomatik kilidi uzatmak gerekebilir.</div>`;
 }
 
