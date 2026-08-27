@@ -1,4 +1,4 @@
-const CACHE = 'bebek-takip-v10';
+const CACHE = 'bebek-takip-v11';
 const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -42,6 +42,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Diğer varlıklar (ikon, yazı tipi, kütüphane): önce önbellek, arkada tazele
+  // Ses dosyaları: bir kez indirilir, sonra hep önbellekten (çevrimdışı ninni)
+  if (url.pathname.includes('/audio/')) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        if (res && res.ok) { const c = res.clone(); caches.open(CACHE).then(k => k.put(req, c)).catch(()=>{}); }
+        return res;
+      }))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {

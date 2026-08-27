@@ -268,6 +268,7 @@
     font-family:'Fraunces',serif;font-weight:600;font-size:12px;cursor:pointer;box-shadow:var(--shadow);}
   .sndCard.on{border-color:var(--milk);color:var(--milk);}
   .sndIc{font-size:20px;}
+  .sndReal{font-size:8.5px;color:var(--care);letter-spacing:.4px;font-family:'Inter',sans-serif;}
   .sndNow{background:var(--surface);border:1px solid var(--milk);border-radius:var(--r);
     padding:18px 14px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow);}
   .sndNowIc{font-size:30px;}
@@ -1193,6 +1194,29 @@ const SOUNDS={
   box:       {name:'Müzik Kutusu',     ic:'🎶', kind:'melody'},
 };
 const DURATIONS=[10,15,20,30,45,60,90,0]; // 0 = sınırsız
+
+/* Gerçek kayıtlar: audio/ klasörüne konursa otomatik kullanılır.
+   Dosya yoksa nota sentezine düşer — uygulama her hâlükârda çalışır. */
+const AUDIO_FILES={
+  brahms:'audio/brahms.mp3',      uyusun:'audio/uyusun.mp3',
+  dandini:'audio/dandini.mp3',    silent:'audio/silent.mp3',
+  rockabye:'audio/rockabye.mp3',  twinkle:'audio/twinkle.mp3',
+  blacksheep:'audio/blacksheep.mp3', london:'audio/london.mp3',
+  weasel:'audio/weasel.mp3',      furelise:'audio/furelise.mp3',
+  swan:'audio/swan.mp3',          sugarplum:'audio/sugarplum.mp3',
+  box:'audio/box.mp3',
+};
+const audioAvail={};   // key -> true/false (bir kez denenir)
+async function hasAudio(key){
+  const url=AUDIO_FILES[key];
+  if(!url) return false;
+  if(key in audioAvail) return audioAvail[key];
+  try{
+    const r=await fetch(url,{method:'HEAD'});
+    audioAvail[key] = r.ok && !(r.headers.get('content-type')||'').includes('text/html');
+  }catch(e){ audioAvail[key]=false; }
+  return audioAvail[key];
+}
 const LS_SND='bt_sound_v1';
 
 /* nota adı -> frekans */
@@ -1305,7 +1329,7 @@ const MELODIES={
    bass:[['C3',4],['A2',4],['F2',4],['G2',4],['C3',4]]},
 };
 
-let AC=null, snd={playing:false, key:null, nodes:[], gain:null, endAt:0, tick:null, melTimer:null};
+let AC=null, snd={playing:false, key:null, nodes:[], gain:null, endAt:0, tick:null, melTimer:null, el:null, live:false};
 
 function soundPrefs(){ return Object.assign({key:'white',vol:45,durIdx:3}, lsGet(LS_SND,{})); }
 function saveSoundPrefs(p){ lsSet(LS_SND,p); }
@@ -1452,6 +1476,17 @@ function startMelody(ctx,key,out){
   return [];
 }
 
+function startFile(ctx,key,out){
+  const el=new Audio(AUDIO_FILES[key]);
+  el.loop=true; el.preload='auto'; el.crossOrigin='anonymous';
+  let node;
+  try{ node=ctx.createMediaElementSource(el); node.connect(out); }
+  catch(e){ el.volume=0.9; }      // bağlanamazsa doğrudan çal
+  el.play().catch(()=>{});
+  snd.el=el;
+  return node?[node]:[];
+}
+
 async function playSound(key){
   stopSound(true);
   const p=soundPrefs(); p.key=key; saveSoundPrefs(p);
@@ -1464,7 +1499,13 @@ async function playSound(key){
   g.connect(AC.destination);
   snd.gain=g; snd.key=key; snd.playing=true;
 
-  snd.nodes = SOUNDS[key].kind==='noise' ? startNoise(AC,key,g) : startMelody(AC,key,g);
+  if(SOUNDS[key].kind==='noise'){
+    snd.nodes=startNoise(AC,key,g); snd.live=false;
+  } else if(await hasAudio(key)){
+    snd.nodes=startFile(AC,key,g); snd.live=true;      // gerçek kayıt
+  } else {
+    snd.nodes=startMelody(AC,key,g); snd.live=false;   // notadan sentez
+  }
 
   const target=volToGain(p.vol);
   g.gain.exponentialRampToValueAtTime(Math.max(target,0.0002), AC.currentTime+1.2);
@@ -1506,7 +1547,8 @@ function stopSound(silent){
       snd.gain.gain.linearRampToValueAtTime(0.0001,AC.currentTime+0.35); }
     snd.nodes.forEach(n=>{ try{ n.stop&&n.stop(AC.currentTime+0.4); }catch(e){} });
   }catch(e){}
-  snd.nodes=[]; snd.playing=false; snd.key=null; snd.endAt=0;
+  try{ if(snd.el){ snd.el.pause(); snd.el.src=''; } }catch(e){}
+  snd.el=null; snd.nodes=[]; snd.playing=false; snd.key=null; snd.endAt=0; snd.live=false;
   if(!silent) render();
 }
 function setVolume(v){
@@ -1558,7 +1600,8 @@ function viewSound(){
     <div class="listLabel">Ninniler</div>
     <div class="sndGrid">${Object.entries(SOUNDS).filter(([,v])=>v.kind==='melody').map(([k,v])=>
       `<button class="sndCard ${snd.playing&&snd.key===k?'on':''}" data-a="playSound" data-k="${k}">
-        <span class="sndIc">${v.ic}</span><span>${v.name}</span></button>`).join('')}</div>
+        <span class="sndIc">${v.ic}</span><span>${v.name}</span>
+        ${audioAvail[k]===true?'<span class="sndReal">kayıt</span>':''}</button>`).join('')}</div>
 
     <div class="panel" style="margin-top:14px;">
       <div class="sldRow"><span class="sldLbl">Ses seviyesi</span><span class="sldVal" id="volLbl">%${p.vol}</span></div>
