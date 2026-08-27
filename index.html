@@ -362,6 +362,7 @@ const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
 const LOGIN_EMAIL="aile@bebektakip.app";
 const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
 const BABY="Alp";
+const APP_VERSION="19";
 
 /* ---- theme ---- */
 function applyTheme(t){
@@ -815,6 +816,13 @@ function viewSettings(){
       </div>
       <button class="bSave" style="width:100%;border:none;border-radius:11px;padding:12px;font-family:'Fraunces',serif;font-weight:600;font-size:13.5px;cursor:pointer;" data-a="makeReport">PDF olarak yazdır</button>
       <div class="setHint">Açılan yazdırma penceresinde hedef olarak "PDF olarak kaydet"i seçin. iPhone'da: Paylaş → Yazdır → parmakla büyüt → Paylaş.</div>
+    </div>
+    <div class="setGroup"><div class="setLabel">Uygulama</div>
+      <div class="sldRow"><span class="sldLbl">Sürüm</span><span class="sldVal">v${APP_VERSION}</span></div>
+      <div class="chips" style="margin-top:8px;">
+        <div class="chip" data-a="forceUpdate">↻ Güncellemeyi zorla</div>
+      </div>
+      <div class="setHint">Yeni özellikler görünmüyorsa buna dokunun: önbellek temizlenip uygulama yeniden yüklenir.</div>
     </div>
     <div class="pacts"><button class="bCancel" data-a="closeSettings">Kapat</button></div>
   </div>`;
@@ -1829,6 +1837,21 @@ document.addEventListener('click', async ev=>{
     panel=null;
   }
   else if(a==='reloadApp'){ location.reload(); return; }
+  else if(a==='forceUpdate'){
+    b.textContent='Güncelleniyor…';
+    try{
+      if('serviceWorker' in navigator){
+        const regs=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r=>r.unregister()));
+      }
+      if(window.caches){
+        const keys=await caches.keys();
+        await Promise.all(keys.map(k=>caches.delete(k)));
+      }
+    }catch(e){ console.error(e); }
+    location.replace(location.pathname+'?v='+Date.now());
+    return;
+  }
   else if(a==='doExport'){ doExport(); return; }
   else if(a==='playSound'){ await playSound(b.dataset.k); return; }
   else if(a==='stopSound'){ stopSound(); return; }
@@ -1911,6 +1934,8 @@ async function setupPush(){
   if(!('serviceWorker' in navigator)||!('PushManager' in window)) return;
   try{
     const reg=await navigator.serviceWorker.register('sw.js');
+    try{ reg.update(); }catch(e){}
+    setInterval(()=>{ try{ reg.update(); }catch(e){} }, 30*60*1000);
     reg.addEventListener('updatefound',()=>{
       const nw=reg.installing;
       if(!nw) return;
@@ -1965,10 +1990,23 @@ function subscribeRealtime(){
 
 /* Uygulamaya geri dönünce: iOS arka planda WebSocket'i kestiği için
    aboneliği yeniden kur ve veriyi tazele. */
+// Yeni servis çalışanı devreye girdiğinde sayfayı bir kez yenile
+if('serviceWorker' in navigator){
+  let swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(swReloaded) return;
+    swReloaded=true;
+    location.reload();
+  });
+}
+
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible' && supabase && online){
     subscribeRealtime();
     refetch();
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistration().then(r=>{ if(r) try{ r.update(); }catch(e){} });
+    }
   }
 });
 window.addEventListener('focus',()=>{ if(supabase && online) refetch(); });
