@@ -256,11 +256,10 @@
   .noteBtns button{background:none;border:none;color:var(--muted);font-size:13px;padding:3px 5px;cursor:pointer;}
   .noteBody{font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;}
 
-  .ptr{position:fixed;top:0;left:0;right:0;height:0;overflow:hidden;z-index:50;
+  .ptr{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:0;overflow:hidden;z-index:50;
     display:flex;align-items:center;justify-content:center;
-    background:var(--surface);color:var(--muted);font-size:11.5px;
-    font-family:'Inter',sans-serif;transition:height .18s ease;
-    padding-top:env(safe-area-inset-top);}
+    background:var(--surface);color:var(--muted);font-size:11.5px;line-height:1;
+    font-family:'Inter',sans-serif;transition:height .18s ease;pointer-events:none;}
   .ptr.spin{color:var(--milk);}
   body{overscroll-behavior-y:contain;}
   .linkBtn{background:none;border:none;color:var(--milk);font-size:12px;cursor:pointer;
@@ -1450,17 +1449,30 @@ function initPullToRefresh(){
     el.style.height=dist+'px';
     el.textContent = dist>THRESHOLD ? 'Bırakın, yenilensin' : 'Yenilemek için çekin';
   },{passive:true});
+  const hide=()=>{ el.style.height='0px'; el.classList.remove('spin'); busy=false; };
   const finish=async()=>{
     if(!active) return;
     const go=dist>THRESHOLD;
     active=false;
-    if(go){
-      busy=true;
-      el.classList.add('spin'); el.textContent='Yenileniyor…'; el.style.height='46px';
-      try{ if(online){ subscribeRealtime(); await refetch(); await flushQueue(); } }catch(e){}
-      setTimeout(()=>{ el.style.height='0px'; el.classList.remove('spin'); busy=false; },350);
-    } else {
-      el.style.height='0px';
+    if(!go){ el.style.height='0px'; return; }
+
+    busy=true;
+    el.classList.add('spin'); el.textContent='Yenileniyor…'; el.style.height='46px';
+    // Emniyet: yenileme takılsa bile gösterge en fazla 8 sn kalır
+    const watchdog=setTimeout(hide,8000);
+    try{
+      if(online){
+        subscribeRealtime();
+        // refetch takılırsa 6 sn sonra vazgeç
+        await Promise.race([
+          (async()=>{ await refetch(); await flushQueue(); })(),
+          new Promise(r=>setTimeout(r,6000)),
+        ]);
+      }
+    }catch(e){ console.error('yenileme',e); }
+    finally{
+      clearTimeout(watchdog);
+      setTimeout(hide,300);
     }
   };
   document.addEventListener('touchend',finish,{passive:true});
