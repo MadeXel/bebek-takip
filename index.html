@@ -1178,9 +1178,19 @@ const SOUNDS={
   heart:   {name:'Kalp Atışı',    ic:'❤️', kind:'noise'},
   fan:     {name:'Vantilatör',    ic:'💨', kind:'noise'},
   wave:    {name:'Deniz Dalgası', ic:'🌊', kind:'noise'},
-  brahms:  {name:'Brahms Ninnisi',ic:'🎵', kind:'melody'},
-  twinkle: {name:'Yıldız Yıldız', ic:'⭐', kind:'melody'},
-  box:     {name:'Müzik Kutusu',  ic:'🎶', kind:'melody'},
+  brahms:    {name:'Brahms Ninnisi',   ic:'🌙', kind:'melody'},
+  uyusun:    {name:'Uyusun da Büyüsün', ic:'🍼', kind:'melody'},
+  dandini:   {name:'Dandini Dandini',  ic:'🌾', kind:'melody'},
+  silent:    {name:'Sessiz Gece',      ic:'❄️', kind:'melody'},
+  rockabye:  {name:'Ninni Bebek',      ic:'👶', kind:'melody'},
+  twinkle:   {name:'Yıldız Yıldız',    ic:'⭐', kind:'melody'},
+  blacksheep:{name:'Mee Mee Kara Kuzu',ic:'🐑', kind:'melody'},
+  london:    {name:'Londra Köprüsü',   ic:'🌉', kind:'melody'},
+  weasel:    {name:'Hop Gelincik',     ic:'🐰', kind:'melody'},
+  furelise:  {name:'Für Elise',        ic:'🎹', kind:'melody'},
+  swan:      {name:'Kuğu',             ic:'🦢', kind:'melody'},
+  sugarplum: {name:'Şekerleme Perisi', ic:'🧚', kind:'melody'},
+  box:       {name:'Müzik Kutusu',     ic:'🎶', kind:'melody'},
 };
 const DURATIONS=[10,15,20,30,45,60,90,0]; // 0 = sınırsız
 const LS_SND='bt_sound_v1';
@@ -1193,18 +1203,106 @@ function nf(n){
   const semi=m[s[1]]+(s[2]?1:0)+(Number(s[3])+1)*12;
   return 440*Math.pow(2,(semi-69)/12);
 }
-/* [nota, vuruş] — hepsi telifsiz/geleneksel ezgiler */
+/* Ezgiler: hepsi geleneksel / halka mal olmuş (klasik) eserlerdir.
+   Notalar tarayıcıda sentezlenir — hazır kayıt kullanılmaz.
+   [nota, vuruş] ; bass: [nota, vuruş] */
 const MELODIES={
-  brahms:{bpm:76,notes:[['E4',1],['E4',1],['G4',2],['E4',1],['E4',1],['G4',2],
-    ['E4',1],['G4',1],['C5',2],['B4',2],['A4',1],['A4',1],['G4',2],
+  brahms:{bpm:74,notes:[
+    ['E4',1],['E4',1],['G4',2],['E4',1],['E4',1],['G4',2],
+    ['E4',1],['G4',1],['C5',2],['B4',2],['A4',1],['A4',1],['G4',3],
     ['D4',1],['E4',1],['F4',2],['D4',1],['E4',1],['F4',2],
-    ['D4',1],['F4',1],['B4',2],['A4',1],['G4',1],['B4',1],['C5',3]]},
-  twinkle:{bpm:84,notes:[['C4',1],['C4',1],['G4',1],['G4',1],['A4',1],['A4',1],['G4',2],
+    ['D4',1],['F4',1],['B4',2],['A4',1],['G4',1],['B4',1],['C5',3]],
+   bass:[['C3',4],['C3',4],['G2',4],['C3',4],['G2',4],['G2',4],['G2',4],['C3',4]]},
+
+  silent:{bpm:64,notes:[
+    ['G4',1.5],['A4',.5],['G4',1],['E4',3],
+    ['G4',1.5],['A4',.5],['G4',1],['E4',3],
+    ['D5',2],['D5',1],['B4',3],['C5',2],['C5',1],['G4',3],
+    ['A4',2],['A4',1],['C5',1.5],['B4',.5],['A4',1],
+    ['G4',1.5],['A4',.5],['G4',1],['E4',3],
+    ['D5',2],['D5',1],['F5',1.5],['D5',.5],['B4',1],
+    ['C5',3],['E5',3],
+    ['C5',1.5],['G4',.5],['E4',1],['G4',1.5],['F4',.5],['D4',1],['C4',3]],
+   bass:[['C3',6],['C3',6],['G2',6],['C3',6],['F2',6],['C3',6],['G2',6],['C3',6]]},
+
+  furelise:{bpm:72,notes:[
+    ['E5',.5],['D#5',.5],['E5',.5],['D#5',.5],['E5',.5],['B4',.5],['D5',.5],['C5',.5],
+    ['A4',1.5],['C4',.5],['E4',.5],['A4',.5],['B4',1.5],['E4',.5],['G#4',.5],['B4',.5],
+    ['C5',1.5],['E4',.5],['E5',.5],['D#5',.5],
+    ['E5',.5],['D#5',.5],['E5',.5],['B4',.5],['D5',.5],['C5',.5],
+    ['A4',1.5],['C4',.5],['E4',.5],['A4',.5],['B4',1.5],['E4',.5],['C5',.5],['B4',.5],['A4',2]],
+   bass:[['A2',3],['E2',3],['A2',3],['E2',3],['A2',3],['E2',3],['A2',3],['E2',3]]},
+
+  swan:{bpm:58,notes:[
+    ['G4',2],['C5',1],['B4',1],['A4',1],['G4',1],['F4',2],['E4',2],
+    ['A4',2],['G4',1],['F4',1],['E4',1],['D4',1],['C4',3],['E4',1],
+    ['G4',2],['C5',1],['E5',1],['D5',2],['C5',2],['B4',3],['G4',1],['C5',4]],
+   bass:[['C3',4],['F2',4],['C3',4],['G2',4],['C3',4],['A2',4],['G2',4],['C3',4]]},
+
+  sugarplum:{bpm:96,notes:[
+    ['E5',.5],['B4',.5],['G#4',.5],['B4',.5],['E5',.5],['B4',.5],['G#4',.5],['B4',.5],
+    ['F5',.5],['C5',.5],['A4',.5],['C5',.5],['F5',.5],['C5',.5],['A4',.5],['C5',.5],
+    ['E5',.5],['B4',.5],['G#4',.5],['B4',.5],['E5',.5],['B4',.5],['G#4',.5],['B4',.5],
+    ['D5',.5],['B4',.5],['G4',.5],['B4',.5],['C5',2]],
+   bass:[['E3',4],['F3',4],['E3',4],['E3',4]]},
+
+  rockabye:{bpm:76,notes:[
+    ['G4',1.5],['E4',.5],['G4',1],['A4',1.5],['G4',.5],['E4',1],
+    ['G4',1.5],['E4',.5],['G4',1],['D4',3],
+    ['C5',1],['B4',1],['A4',1],['G4',1],['A4',1],['B4',1],['C5',3],
+    ['G4',1.5],['E4',.5],['G4',1],['A4',1.5],['G4',.5],['E4',1],['C4',3]],
+   bass:[['C3',3],['G2',3],['C3',3],['G2',3],['C3',3],['G2',3],['C3',3],['C3',3]]},
+
+  twinkle:{bpm:80,notes:[
+    ['C4',1],['C4',1],['G4',1],['G4',1],['A4',1],['A4',1],['G4',2],
     ['F4',1],['F4',1],['E4',1],['E4',1],['D4',1],['D4',1],['C4',2],
     ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2],
-    ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2]]},
-  box:{bpm:66,notes:[['C5',1],['E5',1],['G5',1],['E5',1],['A4',1],['C5',1],['E5',1],['C5',1],
-    ['F4',1],['A4',1],['C5',1],['A4',1],['G4',1],['B4',1],['D5',1],['B4',1]]},
+    ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2],
+    ['C4',1],['C4',1],['G4',1],['G4',1],['A4',1],['A4',1],['G4',2],
+    ['F4',1],['F4',1],['E4',1],['E4',1],['D4',1],['D4',1],['C4',2]],
+   bass:[['C3',4],['F2',4],['C3',4],['G2',4],['C3',4],['G2',4],['C3',4],['F2',4],['C3',4],['G2',4],['C3',4],['C3',4]]},
+
+  blacksheep:{bpm:84,notes:[
+    ['C4',1],['C4',1],['G4',1],['G4',1],['A4',.5],['B4',.5],['C5',.5],['A4',.5],['G4',2],
+    ['F4',1],['F4',1],['E4',1],['E4',1],['D4',1],['D4',1],['C4',2],
+    ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2],
+    ['C4',1],['C4',1],['G4',1],['G4',1],['A4',.5],['B4',.5],['C5',.5],['A4',.5],['G4',2]],
+   bass:[['C3',4],['F2',4],['C3',4],['G2',4],['C3',4],['G2',4],['C3',4],['C3',4]]},
+
+  london:{bpm:88,notes:[
+    ['G5',1.5],['A5',.5],['G5',1],['F5',1],['E5',1],['F5',1],['G5',2],
+    ['D5',1],['E5',1],['F5',2],['E5',1],['F5',1],['G5',2],
+    ['G5',1.5],['A5',.5],['G5',1],['F5',1],['E5',1],['F5',1],['G5',2],
+    ['D5',2],['G5',2],['E5',1],['C5',3]],
+   bass:[['C3',4],['G2',4],['C3',4],['G2',4],['C3',4],['G2',4],['G2',4],['C3',4]]},
+
+  weasel:{bpm:104,notes:[
+    ['C4',1],['C4',.5],['D4',1],['D4',.5],['E4',1],['G4',1],['E4',1],['C4',1],
+    ['C4',1],['C4',.5],['D4',.5],['E4',1],['C4',2],
+    ['C4',1],['C4',.5],['D4',1],['D4',.5],['E4',1],['G4',1],['E4',1],['C4',1],
+    ['A4',1],['D4',1],['C4',2]],
+   bass:[['C3',4],['G2',4],['C3',4],['G2',4],['C3',4],['F2',4]]},
+
+  /* Türk geleneksel ninnileri — kulaktan yazılmış yaklaşık ezgiler */
+  dandini:{bpm:80,notes:[
+    ['A4',1],['A4',1],['B4',1],['A4',1],['G4',1],['G4',2],
+    ['A4',1],['A4',1],['B4',1],['A4',1],['G4',1],['F4',2],
+    ['E4',1],['F4',1],['G4',1],['A4',1],['G4',1],['F4',1],['E4',2],
+    ['A4',1],['G4',1],['F4',1],['E4',1],['D4',3]],
+   bass:[['D3',4],['D3',4],['A2',4],['D3',4],['A2',4],['D3',4]]},
+
+  uyusun:{bpm:70,notes:[
+    ['D4',1],['E4',1],['F4',2],['E4',1],['D4',1],['C4',2],
+    ['D4',1],['E4',1],['F4',1],['G4',1],['A4',3],
+    ['A4',1],['G4',1],['F4',1],['E4',1],['D4',3],
+    ['F4',1],['E4',1],['D4',1],['C4',1],['D4',4]],
+   bass:[['D3',4],['A2',4],['D3',4],['F2',4],['D3',4],['A2',4],['D3',4]]},
+
+  box:{bpm:64,notes:[
+    ['C5',1],['E5',1],['G5',1],['E5',1],['A4',1],['C5',1],['E5',1],['C5',1],
+    ['F4',1],['A4',1],['C5',1],['A4',1],['G4',1],['B4',1],['D5',1],['B4',1],
+    ['C5',1],['E5',1],['G5',1],['C6',2]],
+   bass:[['C3',4],['A2',4],['F2',4],['G2',4],['C3',4]]},
 };
 
 let AC=null, snd={playing:false, key:null, nodes:[], gain:null, endAt:0, tick:null, melTimer:null};
@@ -1272,34 +1370,85 @@ function startNoise(ctx,key,out){
   return nodes;
 }
 
+function makeReverb(ctx,out){
+  // Basit geri beslemeli yankı: müzik kutusuna oda hissi verir
+  const dly=ctx.createDelay(1.0); dly.delayTime.value=0.16;
+  const fb=ctx.createGain(); fb.gain.value=0.34;
+  const wet=ctx.createGain(); wet.gain.value=0.30;
+  const damp=ctx.createBiquadFilter(); damp.type='lowpass'; damp.frequency.value=2600;
+  dly.connect(damp); damp.connect(fb); fb.connect(dly); damp.connect(wet); wet.connect(out);
+  return dly;
+}
+
+/* Piyano/müzik kutusu benzeri nota: birden çok harmonik, her biri ayrı sönümle */
+function pluck(ctx,freq,dur,t,out,rev,vel){
+  vel=vel||1;
+  const PARTIALS=[[1,1.00,1.00],[2,0.42,0.62],[3,0.20,0.44],[4,0.11,0.32],[5.4,0.06,0.24]];
+  const body=ctx.createGain();
+  body.gain.value=1;
+  const tone=ctx.createBiquadFilter();
+  tone.type='lowpass';
+  tone.frequency.setValueAtTime(Math.min(freq*7+1800,9000),t);
+  tone.frequency.exponentialRampToValueAtTime(Math.max(freq*2.2,320),t+Math.min(dur,2.2));
+  body.connect(tone); tone.connect(out); if(rev) tone.connect(rev);
+
+  PARTIALS.forEach(([mult,amp,decayMul],i)=>{
+    const f=freq*mult;
+    if(f>ctx.sampleRate/2.2) return;
+    const o=ctx.createOscillator();
+    o.type = i===0 ? 'triangle' : 'sine';
+    o.frequency.value=f;
+    if(i>0) o.detune.value=(i%2?4:-4);          // hafif ahenksizlik = doğallık
+    const g=ctx.createGain();
+    const peak=0.30*amp*vel;
+    const rel=Math.max(dur*decayMul*1.9,0.35);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(peak,t+0.012);       // yumuşak atak
+    g.gain.exponentialRampToValueAtTime(peak*0.30,t+rel*0.35);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+rel);
+    o.connect(g); g.connect(body);
+    o.start(t); o.stop(t+rel+0.06);
+  });
+}
+
+/* Yumuşak bas eşlik — sıcaklık katar */
+function bassNote(ctx,freq,dur,t,out){
+  const o=ctx.createOscillator(), g=ctx.createGain(), lp=ctx.createBiquadFilter();
+  o.type='sine'; o.frequency.value=freq;
+  lp.type='lowpass'; lp.frequency.value=420;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(0.13,t+0.09);
+  g.gain.exponentialRampToValueAtTime(0.055,t+dur*0.55);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur*1.05);
+  o.connect(lp); lp.connect(g); g.connect(out);
+  o.start(t); o.stop(t+dur*1.1+0.05);
+}
+
 function startMelody(ctx,key,out){
   const M=MELODIES[key], spb=60/M.bpm;
-  let idx=0, next=ctx.currentTime+0.15;
-  const playNote=(freq,dur,t)=>{
-    const o=ctx.createOscillator(), g=ctx.createGain();
-    o.type='triangle'; o.frequency.value=freq;
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.5,t+0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.95);
-    o.connect(g); g.connect(out); o.start(t); o.stop(t+dur+0.05);
-    // hafif oktav üstü tını (müzik kutusu hissi)
-    const o2=ctx.createOscillator(), g2=ctx.createGain();
-    o2.type='sine'; o2.frequency.value=freq*2;
-    g2.gain.setValueAtTime(0.0001,t);
-    g2.gain.exponentialRampToValueAtTime(0.13,t+0.02);
-    g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.7);
-    o2.connect(g2); g2.connect(out); o2.start(t); o2.stop(t+dur+0.05);
-  };
+  const rev=makeReverb(ctx,out);
+  let idx=0, bIdx=0, next=ctx.currentTime+0.25, bNext=next, beatPos=0;
+
   snd.melTimer=setInterval(()=>{
     if(!snd.playing) return;
-    while(next < ctx.currentTime+1.5){
+    const horizon=ctx.currentTime+1.8;
+    while(next<horizon){
       const [n,b]=M.notes[idx];
-      playNote(nf(n), b*spb, next);
-      next += b*spb;
+      // ölçü başlarını hafif vurgula (nefes alan bir ritim)
+      const vel = (beatPos%4<0.01)?1.0 : (beatPos%2<0.01?0.88:0.78);
+      pluck(ctx,nf(n),b*spb,next,out,rev,vel);
+      next += b*spb; beatPos += b;
       idx=(idx+1)%M.notes.length;
-      if(idx===0) next += spb*1.5;  // döngüler arası nefes
+      if(idx===0){ next += spb*2; beatPos=0; bNext=next; bIdx=0; }  // döngüler arası nefes
     }
-  },250);
+    if(M.bass){
+      while(bNext<horizon){
+        const [bn,bb]=M.bass[bIdx%M.bass.length];
+        bassNote(ctx,nf(bn),bb*spb,bNext,out);
+        bNext += bb*spb; bIdx++;
+      }
+    }
+  },220);
   return [];
 }
 
@@ -1420,7 +1569,7 @@ function viewSound(){
       <div class="sldTicks"><span>10dk</span><span>30dk</span><span>90dk</span><span>∞</span></div>
     </div>
     <div class="vnote">Sesler telefonunuzda anlık üretilir; internet gerektirmez. Süre dolunca ses yavaşça kısılarak durur.
-    iPhone'da ekran kilitlenince sesin durabileceğini unutmayın — uzun süreli kullanımda ekranı açık bırakmak veya
+    Ninniler hazır kayıt değil, notalarından anlık çalınır. iPhone'da ekran kilitlenince sesin durabileceğini unutmayın — uzun süreli kullanımda ekranı açık bırakmak veya
     otomatik kilidi uzatmak gerekebilir.</div>`;
 }
 
