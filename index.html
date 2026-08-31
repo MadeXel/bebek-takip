@@ -378,7 +378,7 @@ const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
 const LOGIN_EMAIL="aile@bebektakip.app";
 const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
 const BABY="Alp";
-const APP_VERSION="21";
+const APP_VERSION="22";
 
 /* ---- theme ---- */
 function applyTheme(t){
@@ -489,7 +489,7 @@ const VACCINES=[
 ];
 const ivLabel=v=>v===Math.floor(v)?v+' saat':(Math.floor(v)+' buçuk saat');
 
-let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],notes=[],settings={};
+let entries=[],diapers=[],careLogs=[],growth=[],vaccines=[],notes=[],careTypes=[],clips=[],settings={};
 let tab='feed', dsel={feed:today(),diaper:today(),care:today()}, panel=null, careManage=false, showSettings=false, carePanel=null, noteView='active', supabase;
 
 /* ---- rhythm strip ---- */
@@ -645,7 +645,7 @@ async function flushQueue(){
 
 /* Çevrimdışıyken ekranın hemen güncellenmesi için yerel uygulama */
 function applyLocally(op){
-  const store={entries,diapers,care_logs:careLogs,growth,vaccines,notes,settings:null}[op.table];
+  const store={entries,diapers,care_logs:careLogs,growth,vaccines,notes,care_types:careTypes,sound_clips:clips,settings:null}[op.table];
   if(op.table==='settings'){
     if(op.row) settings[op.row.key]=op.row.value;
     return;
@@ -674,13 +674,13 @@ function applyLocally(op){
 }
 
 function cacheSnapshot(){
-  lsSet(LS_CACHE,{entries,diapers,careLogs,growth,vaccines,notes,settings,at:Date.now()});
+  lsSet(LS_CACHE,{entries,diapers,careLogs,growth,vaccines,notes,careTypes,clips,settings,at:Date.now()});
 }
 function loadSnapshot(){
   const c=lsGet(LS_CACHE,null);
   if(!c) return false;
   entries=c.entries||[]; diapers=c.diapers||[]; careLogs=c.careLogs||[];
-  growth=c.growth||[]; vaccines=c.vaccines||[]; notes=c.notes||[]; settings=c.settings||{};
+  growth=c.growth||[]; vaccines=c.vaccines||[]; notes=c.notes||[]; careTypes=c.careTypes||[]; clips=c.clips||[]; settings=c.settings||{}; rebuildCare();
   return true;
 }
 window.addEventListener('online', ()=>{ online=true; render(); flushQueue(); });
@@ -1820,7 +1820,7 @@ async function setupPush(){
 async function refetch(){
   if(!online) { renderBg(); return; }
   try{
-  const [a,b,c,d,e,v,nt]=await Promise.all([
+  const [a,b,c,d,e,v,nt,ct,sc]=await Promise.all([
     supabase.from('entries').select('*').order('time',{ascending:false}),
     supabase.from('diapers').select('*').order('time',{ascending:false}),
     supabase.from('care_logs').select('*').order('time',{ascending:false}),
@@ -1828,6 +1828,8 @@ async function refetch(){
     supabase.from('settings').select('*'),
     supabase.from('vaccines').select('*'),
     supabase.from('notes').select('*'),
+    supabase.from('care_types').select('*'),
+    supabase.from('sound_clips').select('*'),
   ]);
   if(!a.error) entries=a.data.map(x=>({...x,amount:Number(x.amount)}));
   if(!b.error) diapers=b.data;
@@ -1836,6 +1838,8 @@ async function refetch(){
   if(!e.error){ settings={}; e.data.forEach(r=>settings[r.key]=r.value); }
   if(!v.error) vaccines=v.data;
   if(!nt.error) notes=nt.data;
+  if(!ct.error){ careTypes=ct.data; rebuildCare(); }
+  if(!sc.error) clips=sc.data;
   cacheSnapshot();
   renderBg();
   }catch(err){ online=false; renderBg(); }
@@ -1845,7 +1849,7 @@ function showApp(){ document.title=BABY+' · Bebek Takip'; $('loginScreen').styl
 let rtChannels=[];
 function subscribeRealtime(){
   try{ rtChannels.forEach(ch=>supabase.removeChannel(ch)); }catch(e){}
-  rtChannels=['entries','diapers','care_logs','growth','settings','vaccines','notes'].map(t=>
+  rtChannels=['entries','diapers','care_logs','growth','settings','vaccines','notes','care_types','sound_clips'].map(t=>
     supabase.channel(t+'-ch-'+Math.random().toString(36).slice(2,7))
       .on('postgres_changes',{event:'*',schema:'public',table:t},refetch).subscribe());
 }
