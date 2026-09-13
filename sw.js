@@ -1,4 +1,4 @@
-const CACHE = 'bebek-takip-v22';
+const CACHE = 'bebek-takip-v23';
 const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', (event) => {

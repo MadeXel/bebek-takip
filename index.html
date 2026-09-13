@@ -93,6 +93,7 @@
 
   .acts{display:grid;gap:9px;margin-bottom:14px;}
   .acts.c3{grid-template-columns:repeat(3,1fr);}
+  .acts.c2{grid-template-columns:repeat(2,1fr);}
   .act{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 6px;
     display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;color:var(--text);
     font-family:'Fraunces',serif;font-weight:600;font-size:12.5px;transition:transform .08s;box-shadow:var(--shadow);}
@@ -308,6 +309,17 @@
   .clipName{font-family:'Fraunces',serif;font-weight:600;font-size:14px;}
   .clipMeta{font-size:11px;color:var(--muted);margin-top:2px;}
   .clipDel{background:none;border:none;color:var(--muted);font-size:15px;padding:6px;cursor:pointer;}
+  .swRow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer;
+    border-bottom:1px solid var(--line);}
+  .swRow:last-child{border-bottom:none;}
+  .swLabel{font-size:13.5px;}
+  .sw{width:44px;height:26px;border-radius:13px;background:var(--surface-2);border:1px solid var(--line);
+    position:relative;transition:background .15s;flex-shrink:0;}
+  .sw.on{background:var(--care);border-color:var(--care);}
+  .swKnob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+    background:var(--text);transition:transform .15s;}
+  .sw.on .swKnob{transform:translateX(18px);background:var(--ink);}
+  .swSub{padding-left:12px;border-left:2px solid var(--line);margin:4px 0 8px;}
   .linkBtn{background:none;border:none;color:var(--milk);font-size:12px;cursor:pointer;
     font-family:'Inter',sans-serif;padding:6px 10px;text-decoration:underline;}
   .tabs{position:fixed;left:0;right:0;bottom:0;background:var(--tabBg);backdrop-filter:blur(14px);
@@ -378,7 +390,7 @@ const SUPABASE_ANON_KEY="sb_publishable_2yIWU2OZOqhKoXORpO5_9g_rzey2_9z";
 const LOGIN_EMAIL="aile@bebektakip.app";
 const VAPID_PUBLIC_KEY="BJZkyQ1h6ATndhytyv-MwjU4YSiWxF3wyiROm6IwREzDEguikK1MAwx1poklTCARspIURcBb4urk_y88BrBPJbA";
 const BABY="Alp";
-const APP_VERSION="22";
+const APP_VERSION="23";
 
 /* ---- theme ---- */
 function applyTheme(t){
@@ -455,7 +467,15 @@ function greeting(){
   return 'İyi akşamlar';
 }
 
-const FEED={ milk:{name:'Anne Sütü',ic:'🤱',color:'var(--milk)'}, formula:{name:'Mama',ic:'🍼',color:'var(--formula)'}, pump:{name:'Sağma',ic:'🫙',color:'var(--pump)'} };
+const FEED={
+  nurse:  {name:'Emzirme',   ic:'🤱', color:'var(--milk)',    unit:'dk'},
+  milk:   {name:'Anne Sütü', ic:'🍼', color:'var(--formula)', unit:'cc'},
+  formula:{name:'Mama',      ic:'🥛', color:'var(--pee)',     unit:'cc'},
+  pump:   {name:'Sağma',     ic:'🫙', color:'var(--pump)',    unit:'cc'},
+};
+const isNurse=t=>t==='nurse';
+const feedQty=e=>isNurse(e.type)?Number(e.minutes||0):Number(e.amount||0);
+const feedUnit=t=>FEED[t]?FEED[t].unit:'cc';
 const DIAPER={ pee:{name:'Çiş',ic:'💧',color:'var(--pee)'}, poop:{name:'Kaka',ic:'💩',color:'var(--poop)'}, both:{name:'İkisi de',ic:'🧷',color:'var(--poop)'} };
 /* Bakım türleri veritabanından gelir (care_types tablosu). */
 let CARE={};
@@ -466,7 +486,7 @@ function rebuildCare(){
 }
 const INTERVALS=[1.5,2,2.5,3,3.5,4];
 const SIDE={ left:{name:'Sol',short:'sol'}, right:{name:'Sağ',short:'sağ'}, both:{name:'İkisi',short:'ikisi'} };
-const SIDE_TYPES=['milk','pump'];  // taraf sadece emzirme ve sağmada sorulur
+const SIDE_TYPES=['nurse','pump'];  // taraf sadece emzirme ve sağmada sorulur
 
 /* Türkiye Ulusal Aşı Takvimi (GBP) — ay cinsinden hedef zamanlar.
    Kaynaklarda küçük farklılıklar olabilir; kesin plan için aile hekimine danışın. */
@@ -530,27 +550,28 @@ function buildReport(from,to,opts){
   const days=daysBetween(from,to);
   if(days.length===0||days.length>120) return '<p>Geçersiz tarih aralığı.</p>';
   const bd=birthDate();
-  let totMilk=0,totFormula=0,totPump=0,totFeeds=0,totPee=0,totPoop=0;
+  let totMilk=0,totFormula=0,totPump=0,totNurse=0,totFeeds=0,totPee=0,totPoop=0;
 
   const dayBlocks=days.map(ds=>{
     const fe=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
     const di=diapers.filter(d=>localDay(d.time)===ds).sort((a,b)=>new Date(a.time)-new Date(b.time));
     if(!fe.length&&!di.length) return '';
-    const milk=fe.filter(e=>e.type==='milk').reduce((s,e)=>s+e.amount,0);
-    const formula=fe.filter(e=>e.type==='formula').reduce((s,e)=>s+e.amount,0);
-    const pump=fe.filter(e=>e.type==='pump').reduce((s,e)=>s+e.amount,0);
+    const milk=fe.filter(e=>e.type==='milk').reduce((s,e)=>s+feedQty(e),0);
+    const formula=fe.filter(e=>e.type==='formula').reduce((s,e)=>s+feedQty(e),0);
+    const pump=fe.filter(e=>e.type==='pump').reduce((s,e)=>s+feedQty(e),0);
+    const nurseMin=fe.filter(e=>e.type==='nurse').reduce((s,e)=>s+feedQty(e),0);
     const feeds=fe.filter(e=>e.type!=='pump').length;
     const pee=di.filter(d=>d.kind!=='poop').length, poop=di.filter(d=>d.kind!=='pee').length;
-    totMilk+=milk; totFormula+=formula; totPump+=pump; totFeeds+=feeds; totPee+=pee; totPoop+=poop;
+    totMilk+=milk; totFormula+=formula; totPump+=pump; totNurse+=nurseMin; totFeeds+=feeds; totPee+=pee; totPoop+=poop;
 
     const rows=[];
-    if(opts.feed) fe.forEach(e=>rows.push({t:e.time,k:FEED[e.type].name+(e.side?' ('+SIDE[e.side].short+')':''),v:e.amount+' cc'}));
+    if(opts.feed) fe.forEach(e=>rows.push({t:e.time,k:FEED[e.type].name+(e.side?' ('+SIDE[e.side].short+')':''),v:feedQty(e)+' '+feedUnit(e.type)}));
     if(opts.diaper) di.forEach(d=>rows.push({t:d.time,k:DIAPER[d.kind].name,v:''}));
     rows.sort((a,b)=>new Date(a.t)-new Date(b.t));
 
     return `<div class="rday">
       <h3>${new Date(ds+'T00:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'})}</h3>
-      <div class="rsum">${opts.feed?`${feeds} beslenme · anne sütü ${milk} cc · mama ${formula} cc · sağılan ${pump} cc`:''}${opts.feed&&opts.diaper?' &nbsp;|&nbsp; ':''}${opts.diaper?`çiş ${pee} · kaka ${poop}`:''}</div>
+      <div class="rsum">${opts.feed?`${feeds} beslenme · emzirme ${nurseMin} dk · anne sütü ${milk} cc · mama ${formula} cc · sağılan ${pump} cc`:''}${opts.feed&&opts.diaper?' &nbsp;|&nbsp; ':''}${opts.diaper?`çiş ${pee} · kaka ${poop}`:''}</div>
       <table><thead><tr><th>Saat</th><th>Kayıt</th><th>Miktar</th></tr></thead><tbody>
       ${rows.map(r=>`<tr><td>${hhmm(r.t)}</td><td>${r.k}</td><td>${r.v}</td></tr>`).join('')}
       </tbody></table></div>`;
@@ -567,9 +588,10 @@ function buildReport(from,to,opts){
     </div>
     <div class="rtot"><h2>Dönem özeti</h2><table><tbody>
       ${opts.feed?`<tr><td>Toplam beslenme</td><td>${totFeeds} kez</td><td>günlük ort. ${(totFeeds/nd).toFixed(1)}</td></tr>
+      <tr><td>Emzirme süresi</td><td>${totNurse} dk</td><td>günlük ort. ${Math.round(totNurse/nd)} dk</td></tr>
       <tr><td>Anne sütü</td><td>${totMilk} cc</td><td>günlük ort. ${Math.round(totMilk/nd)} cc</td></tr>
       <tr><td>Mama</td><td>${totFormula} cc</td><td>günlük ort. ${Math.round(totFormula/nd)} cc</td></tr>
-      <tr><td>Toplam alım</td><td>${totMilk+totFormula} cc</td><td>günlük ort. ${Math.round((totMilk+totFormula)/nd)} cc</td></tr>
+      <tr><td>Biberonla toplam</td><td>${totMilk+totFormula} cc</td><td>günlük ort. ${Math.round((totMilk+totFormula)/nd)} cc</td></tr>
       <tr><td>Sağılan süt</td><td>${totPump} cc</td><td>günlük ort. ${Math.round(totPump/nd)} cc</td></tr>`:''}
       ${opts.diaper?`<tr><td>Çiş</td><td>${totPee}</td><td>günlük ort. ${(totPee/nd).toFixed(1)}</td></tr>
       <tr><td>Kaka</td><td>${totPoop}</td><td>günlük ort. ${(totPoop/nd).toFixed(1)}</td></tr>`:''}
@@ -794,6 +816,13 @@ function panelNote(){
   </div>`;
 }
 
+function swRow(key,label){
+  const on=notifOn(key) && (key==='quiet_enabled' ? (settings[key]??'0')==='1' : true);
+  const val = key==='quiet_enabled' ? (settings[key]??'0')==='1' : notifOn(key);
+  return `<div class="swRow" data-a="toggleNotif" data-key="${key}">
+    <span class="swLabel">${label}</span>
+    <span class="sw ${val?'on':''}"><span class="swKnob"></span></span></div>`;
+}
 function viewSettings(){
   if(!showSettings) return '';
   const th=document.documentElement.getAttribute('data-theme');
@@ -812,6 +841,22 @@ function viewSettings(){
       ${INTERVALS.map(v=>`<div class="chip ${v===fh?'on':''}" data-a="setIv" data-key="reminder_feed_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
     <div class="setGroup"><div class="setLabel">Sağma hatırlatması — son sağmadan sonra</div><div class="chips">
       ${INTERVALS.map(v=>`<div class="chip ${v===ph?'on':''}" data-a="setIv" data-key="reminder_pump_hours" data-v="${v}">${ivLabel(v)}</div>`).join('')}</div></div>
+    <div class="setGroup"><div class="setLabel">Bildirimler</div>
+      ${swRow('notif_master','Tüm bildirimler')}
+      ${notifOn('notif_master')?`
+        <div class="swSub">
+          ${swRow('notif_feed','🍼 Süt vakti')}
+          ${swRow('notif_pump','🫙 Sağma vakti')}
+          ${Object.entries(CARE).map(([k,m])=>swRow('notif_care_'+k, m.ic+' '+m.name)).join('')}
+        </div>
+        ${swRow('quiet_enabled','🌙 Sessiz saatler')}
+        ${(settings.quiet_enabled??'0')==='1'?`<div class="swSub" style="display:flex;gap:10px;align-items:center;">
+          <span class="sldLbl">Başlangıç</span><input type="time" class="tin" value="${settings.quiet_from||'23:00'}" data-a="setTime" data-key="quiet_from"/>
+          <span class="sldLbl">Bitiş</span><input type="time" class="tin" value="${settings.quiet_to||'07:00'}" data-a="setTime" data-key="quiet_to"/>
+        </div>`:''}
+      `:''}
+      <div class="setHint">${quietNow()?'Şu an sessiz saatlerdesiniz — bildirim gönderilmiyor.':'Kapattığınız bildirimler hem ekranda hem telefonunuzda gösterilmez.'}</div>
+    </div>
     <div class="setGroup"><div class="setLabel">Yedekleme</div>
       ${backupWarning()}
       <div class="chips" style="margin-bottom:8px;">
@@ -855,7 +900,7 @@ function lastWithSide(type){
     .find(e=>e.type===type && e.side);
 }
 function sideHint(){
-  const lm=lastWithSide('milk'), lp=lastWithSide('pump');
+  const lm=lastWithSide('nurse'), lp=lastWithSide('pump');
   const bits=[];
   if(lm){
     const next=lm.side==='left'?'sağ':lm.side==='right'?'sol':null;
@@ -952,7 +997,7 @@ function panelVaccine(){
 function viewFeed(){
   const ds=dsel.feed;
   const day=entries.filter(e=>localDay(e.time)===ds).sort((a,b)=>new Date(b.time)-new Date(a.time));
-  const sum=t=>day.filter(e=>e.type===t).reduce((s,e)=>s+e.amount,0);
+  const sum=t=>day.filter(e=>e.type===t).reduce((s,e)=>s+feedQty(e),0);
   const all=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time));
   const lastFeed=all.find(e=>e.type!=='pump'), lastPump=all.find(e=>e.type==='pump');
   return dateBar('feed')+`
@@ -964,18 +1009,22 @@ function viewFeed(){
     </div>
     ${sideHint()}
     <div class="stats">
+      <div class="stat"><div class="statLabel">Emzirme</div><div class="statVal">${sum('nurse')}<span class="statUnit">dk</span></div></div>
       <div class="stat"><div class="statLabel">Anne sütü</div><div class="statVal">${sum('milk')}<span class="statUnit">cc</span></div></div>
       <div class="stat"><div class="statLabel">Mama</div><div class="statVal">${sum('formula')}<span class="statUnit">cc</span></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="statLabel">Biberonla toplam</div><div class="statVal">${sum('milk')+sum('formula')}<span class="statUnit">cc</span></div></div>
       <div class="stat"><div class="statLabel">Sağılan</div><div class="statVal">${sum('pump')}<span class="statUnit">cc</span></div></div>
     </div>
-    <div class="acts c3">${Object.entries(FEED).map(([k,m])=>
+    <div class="acts c2">${Object.entries(FEED).map(([k,m])=>
       `<button class="act" data-a="newFeed" data-t="${k}"><span class="swatch" style="background:${m.color}22;">${m.ic}</span>${m.name}</button>`).join('')}</div>
     <div id="panelSlot">${panel&&panel.s==='feed'?panelFeed():''}</div>
     ${day.length?`<div class="listLabel">Gün içindeki kayıtlar</div>`+day.map(e=>{
       const m=FEED[e.type];
       return `<div class="item"><div class="bar" style="background:${m.color}"></div>
         <div class="itemMid"><div class="itemName">${m.name}${e.side?`<span class="sideTag">${SIDE[e.side].name}</span>`:''}${byTag(e)}</div><div class="itemMeta">${hhmm(e.time)} · ${ago(e.time)}</div></div>
-        <div class="itemVal">${e.amount}<span class="statUnit">cc</span></div>
+        <div class="itemVal">${feedQty(e)}<span class="statUnit">${feedUnit(e.type)}</span></div>
         <div class="itemBtns"><button data-a="editFeed" data-id="${e.id}">✎</button><button data-a="delFeed" data-id="${e.id}">✕</button></div></div>`;
     }).join(''):`<div class="blank">Bu gün için kayıt yok.</div>`}`;
 }
@@ -990,7 +1039,10 @@ function panelFeed(){
       <div class="chips">${Object.entries(SIDE).map(([k,m])=>`<div class="chip ${k===side?'on':''}" data-a="pickSide" data-v="${k}">${m.name}</div>`).join('')}
       ${side?`<div class="chip" data-a="pickSide" data-v="">temizle</div>`:''}</div>`:''}
     <div class="row2">
-      <div class="fld"><label>Miktar (cc)</label><input type="number" id="fAmt" inputmode="numeric" min="0" step="5" value="${ed?ed.amount:''}" placeholder="60"/></div>
+      <div class="fld"><label>${isNurse(type)?'Süre (dakika)':'Miktar (cc)'}</label>
+        <input type="number" id="fAmt" inputmode="numeric" min="0" step="${isNurse(type)?1:5}"
+          value="${ed?(isNurse(type)?(ed.minutes??''):(ed.amount??'')):''}"
+          placeholder="${isNurse(type)?'15':'60'}"/></div>
       <div class="fld"><label>Saat</label><input type="time" id="fTime" value="${timeOnly(ed?ed.time:null)}"/></div>
     </div>
     <div class="pacts"><button class="bCancel" data-a="close">Vazgeç</button>
@@ -1523,23 +1575,32 @@ function viewSound(){
 }
 
 /* ---- alerts ---- */
+const notifOn=k=>(settings[k]??'1')!=='0';
+function quietNow(){
+  if((settings.quiet_enabled??'0')!=='1') return false;
+  const f=(settings.quiet_from||'23:00').split(':').map(Number);
+  const t=(settings.quiet_to||'07:00').split(':').map(Number);
+  const now=new Date(), m=now.getHours()*60+now.getMinutes();
+  const a=f[0]*60+f[1], b=t[0]*60+t[1];
+  return a<=b ? (m>=a&&m<b) : (m>=a||m<b);   // gece yarısını aşabilir
+}
 function renderAlerts(){
   const out=[];
   const all=[...entries].sort((a,b)=>new Date(b.time)-new Date(a.time));
   const fh=parseFloat(settings.reminder_feed_hours||'2');
   const lf=all.find(e=>e.type!=='pump');
-  if(lf&&hoursSince(lf.time)>=fh) out.push(`Süt vakti — son beslenmeden ${Math.floor(hoursSince(lf.time))} saatten fazla geçti`);
+  if(notifOn('notif_feed')&&lf&&hoursSince(lf.time)>=fh) out.push(`Süt vakti — son beslenmeden ${Math.floor(hoursSince(lf.time))} saatten fazla geçti`);
   const ph=parseFloat(settings.reminder_pump_hours||'3');
   const lp=all.find(e=>e.type==='pump');
-  if(lp&&hoursSince(lp.time)>=ph) out.push(`Sağma vakti — son sağmadan ${Math.floor(hoursSince(lp.time))} saatten fazla geçti`);
+  if(notifOn('notif_pump')&&lp&&hoursSince(lp.time)>=ph) out.push(`Sağma vakti — son sağmadan ${Math.floor(hoursSince(lp.time))} saatten fazla geçti`);
   Object.entries(CARE).forEach(([k,m])=>{
-    if(!m.key) return;
+    if(!m.key || !notifOn('notif_care_'+k)) return;
     const t=settings[m.key]; if(!t||careToday(k).length) return;
     const [h,mi]=t.split(':').map(Number);
     const d=new Date(); d.setHours(h,mi,0,0);
     if(Date.now()>d.getTime()) out.push(`${m.name} bugün henüz yapılmadı (${t})`);
   });
-  $('alerts').innerHTML=out.map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
+  $('alerts').innerHTML=(notifOn('notif_master')?out:[]).map(t=>`<div class="alert">⏰ ${esc(t)}</div>`).join('');
 }
 
 function byTag(r){
@@ -1624,7 +1685,9 @@ document.addEventListener('click', async ev=>{
     if(!amt||amt<=0){ $('fAmt').style.borderColor='var(--danger)'; return; }
     const iso=combineDT(dsel.feed, $('fTime').value);
     const side = SIDE_TYPES.includes(panel.t) ? (panel.side!==undefined?panel.side:null) : null;
-    const row={type:panel.t,amount:amt,time:iso,side:side||null};
+    const row = isNurse(panel.t)
+      ? {type:panel.t, minutes:amt, amount:null, time:iso, side:side||null}
+      : {type:panel.t, amount:amt, minutes:null, time:iso, side:side||null};
     if(panel.id) await mutate({table:'entries',action:'update',id:panel.id,row});
     else await mutate({table:'entries',action:'insert',row:{...row,recorded_by:whoAmI()}});
     panel=null;
@@ -1699,6 +1762,14 @@ document.addEventListener('click', async ev=>{
     panel=null;
   }
   else if(a==='reloadApp'){ location.reload(); return; }
+  else if(a==='toggleNotif'){
+    const k=b.dataset.key;
+    const cur = k==='quiet_enabled' ? (settings[k]??'0')==='1' : notifOn(k);
+    const val = cur?'0':'1';
+    settings[k]=val;
+    await mutate({table:'settings',action:'upsert',row:{key:k,value:val},onConflict:'key'});
+    render(); return;
+  }
   else if(a==='forceUpdate'){
     b.textContent='Güncelleniyor…';
     try{
